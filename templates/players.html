@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Players{% endblock %}
+
+{% block content %}
+  <div class="container-fluid">
+  <h4 align="center">Players</h4>
+    <table class="table">
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Created</th>
+        <th scope="col">Ongoing games</th>
+        <th scope="col">Completed games</th>
+      </tr>
+      {% for player in players %}
+        <tr>
+          <td>{{ player.name }}</td>
+          <td>{{ player.inserted_at|date }}</td>
+          <td>{{ player.ongoing_games }}</td>
+          <td>{{ player.completed_games }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+  <html>
+    <head>
+      <title>{% block title %}{% endblock %}</title>
+      {% load bootstrap5 %}
+      {% bootstrap_css %}
+      {% bootstrap_javascript %}
+      <link href="{% static 'fontawesomefree/css/fontawesome.css' %}" rel="stylesheet" type="text/css">
+      <link href="{% static 'fontawesomefree/css/brands.css' %}" rel="stylesheet" type="text/css">
+      <link href="{% static 'fontawesomefree/css/solid.css' %}" rel="stylesheet" type="text/css">
+    </head>
+
+    <body>
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="{% url 'home' %}">What's Trumps?</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Home</a>
+              </li>
+
+              {% if user.is_authenticated %}
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'games' %}">Games</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'players' %}">Players</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">Stats</a>
+              </li>
+              {% endif %}
+
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  About
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item" href="#">Info</a></li>
+                  <li><a class="dropdown-item" href="#">Rules</a></li>
+                  {% comment %} <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="#">Something else here</a></li> {% endcomment %}
+                </ul>
+              </li>
+            </ul>
+            <span class="navbar-text">
+              <table align="right">
+                {% if not user.is_authenticated %}
+                  <tr>
+                    <td><a class="nav-item" href="{% url 'login' %}">Log in</a></td>
+                    <td><a class="nav-item" href="{% url 'django_registration_register' %}">Sign up</a></td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td></td>
+                    <td><a class="nav-item" href="{% url 'logout' %}">Log out</a></td>
+                  </tr>
+                {% endif %}
+              </table>
+            </span>
+          </div>
+        </div>
+      </nav>
+
+      <div class="container">
+        {% block content %}
+        {% endblock %}
+      </div>
+
+      <!-- Footer -->
+      <footer class="text-center text-lg-start bg-light text-muted">
+        <!-- Section: Social media -->
+        <section class="d-flex justify-content-center justify-content-lg-between p-4 border-bottom">
+          <!-- Left -->
+          <div class="me-5 d-none d-lg-block">
+            <span>Something something here</span>
+          </div>
+          <!-- Left -->
+
+          <!-- Right -->
+          <div>
+            <a href="" class="me-4 text-reset">
+              <i class="fab fa-linkedin"></i>
+            </a>
+            <a href="" class="me-4 text-reset">
+              <i class="fab fa-github"></i>
+            </a>
+          </div>
+          <!-- Right -->
+        </section>
+        <!-- Section: Social media -->
+
+        <!-- Copyright -->
+        <div class="text-center p-4" style="background-color: rgba(0, 0, 0, 0.05);">
+          © 2023 by Rich Barton-Cooper
+        </div>
+        <!-- Copyright -->
+      </footer>
+      <!-- Footer -->
+    </body>
+  </html>
