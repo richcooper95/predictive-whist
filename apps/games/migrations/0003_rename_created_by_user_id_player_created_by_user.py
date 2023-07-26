@@ -4,15 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('games', '0002_rename_game_id_gameplayer_game_and_more'),
+        ("games", "0002_rename_game_id_gameplayer_game_and_more"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='player',
-            old_name='created_by_user_id',
-            new_name='created_by_user',
+            model_name="player",
+            old_name="created_by_user_id",
+            new_name="created_by_user",
         ),
     ]

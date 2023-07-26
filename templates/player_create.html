@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Players{% endblock %}
+
+{% block content %}
+  <div class="container-fluid">
+    <h4 align="center">New Player</h4>
+
+    <form action="" method="post">
+      {% csrf_token %}
+      <table>
+      {{ form|crispy }}
+      </table>
+      <input type="submit" value="Create player">
+    </form>
+
+  </div>
+{% endblock %}

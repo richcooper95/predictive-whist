@@ -5,12 +5,16 @@
 {% block content %}
   <div class="container-fluid">
   <h4 align="center">Players</h4>
-    <table class="table">
+    <a role="button" class="btn btn-secondary" href="{% url 'player_create' %}">+ New</a>
+		<br>
+		<br>
+    <table class="table table-hover">
       <tr>
         <th scope="col">Name</th>
         <th scope="col">Created</th>
         <th scope="col">Ongoing games</th>
         <th scope="col">Completed games</th>
+        <th scope="col" align="right"></th>
       </tr>
       {% for player in players %}
         <tr>
@@ -18,6 +22,9 @@
           <td>{{ player.inserted_at|date }}</td>
           <td>{{ player.ongoing_games }}</td>
           <td>{{ player.completed_games }}</td>
+          <td>
+            <a href="{% url 'player_delete' player.id %}" method="DELETE">Delete</a>
+          </td>
         </tr>
       {% endfor %}
     </table>

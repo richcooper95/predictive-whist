@@ -42,9 +42,14 @@ INSTALLED_APPS = [
     "django_registration",
     "bootstrap5",
     "fontawesomefree",
+    "crispy_forms",
+    "crispy_bootstrap5",
     "apps.home.apps.HomeConfig",
     "apps.games.apps.GamesConfig",
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

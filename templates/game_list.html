@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Games{% endblock %}
+
+{% block content %}
+  <div class="container-fluid">
+	  <h4 align="center">Games</h4>
+    <a role="button" class="btn btn-secondary" href="{% url 'game_create' %}">+ New</a>
+		<br>
+		<br>
+    <h5>Ongoing</h5>
+		{% if completed_games|length == 0 %}
+      <p align="center">No games in progress. Start one with <b>+ New</b> above.</p>
+    {% else %}
+      <table class="table table-hover">
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Players</th>
+          <th scope="col">Created</th>
+          <th scope="col" align="right"></th>
+          <th scope="col" align="right"></th>
+        </tr>
+        {% for game in ongoing_games %}
+          <tr>
+            <td>{{ game.name }}</td>
+            <td>{{ game.player_names }}</td>
+            <td>{{ game.inserted_at|date }}</td>
+            <td>
+              <a href="{% url 'game_show' game.id %}" method="GET">Continue</a>
+            </td>
+            <td>
+              <a href="{% url 'game_delete' game.id %}" method="DELETE">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
+
+		<br>
+		<hr>
+		<br>
+
+	  <h5>Completed</h5>
+		{% if completed_games|length == 0 %}
+			<p align="center">No games have completed yet!</p>
+		{% else %}
+    <table class="table">
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Players</th>
+        <th scope="col">Created</th>
+        <th scope="col">Winner</th>
+        <th scope="col" align="right"></th>
+      </tr>
+      {% for game in completed_games %}
+        <tr>
+          <td>{{ game.name }}</td>
+          <td>{{ game.player_names }}</td>
+          <td>{{ game.inserted_at|date }}</td>
+          <td>{{ game.winning_player }}</td>
+          <td>
+					  <a href="{% url 'game_delete' game.id %}" method="DELETE">Delete</a>
+					</td>
+        </tr>
+      {% endfor %}
+    </table>
+		{% endif %}
+  </div>
+{% endblock %}
