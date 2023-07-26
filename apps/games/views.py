@@ -55,6 +55,9 @@ class GamesView(TemplateView, LoginRequiredMixin):
         games = Game.objects.all()
         game_players = GamePlayer.objects.select_related("game", "player").all()
 
+        ongoing_games = []
+        completed_games = []
+
         for game in games:
             game.player_names = ", ".join(
                 game_players.filter(game=game).values_list("player__name", flat=True)
@@ -69,12 +72,19 @@ class GamesView(TemplateView, LoginRequiredMixin):
             else:
                 game.winning_player = "TBC"
 
+            if game.is_ongoing:
+                ongoing_games.append(game)
+            else:
+                completed_games.append(game)
+
+        print(ongoing_games)
+        print(completed_games)
         return render(
             request,
             self.template_name,
             {
-                "ongoing_games": [game for game in games if game.is_ongoing],
-                "completed_games": [game for game in games if not game.is_ongoing],
+                "ongoing_games": ongoing_games,
+                "completed_games": completed_games,
             },
         )
 
