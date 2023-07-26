@@ -3,8 +3,8 @@
 {% block title %}Delete Game{% endblock %}
 
 {% block content %}
-  <h2>Delete Game</h2>
-  <form method="post">
+  <h4 align="center">Delete Game</h4>
+  <form method="post" align="center">
     {% csrf_token %}
       <p>Are you sure you want to delete the game <strong>{{ game.name }}</strong>?</p>
       <input type="submit" value="Delete" class="btn btn-danger">
