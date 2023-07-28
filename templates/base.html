@@ -9,12 +9,13 @@
       <link href="{% static 'fontawesomefree/css/fontawesome.css' %}" rel="stylesheet" type="text/css">
       <link href="{% static 'fontawesomefree/css/brands.css' %}" rel="stylesheet" type="text/css">
       <link href="{% static 'fontawesomefree/css/solid.css' %}" rel="stylesheet" type="text/css">
+      <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🃏</text></svg>">
     </head>
 
     <body>
-      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light" style="height: 73px">
         <div class="container-fluid">
-          <a class="navbar-brand" href="{% url 'home' %}">What's Trumps?</a>
+          <a class="navbar-brand" href="{% url 'home' %}">🃏 What's Trumps?</a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
@@ -31,9 +32,10 @@
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'players' %}">Players</a>
               </li>
-              <li class="nav-item">
+              {% comment %} TODO: Add some stats! {% endcomment %}
+              {% comment %} <li class="nav-item">
                 <a class="nav-link" href="#">Stats</a>
-              </li>
+              </li> {% endcomment %}
               {% endif %}
 
               <li class="nav-item dropdown">
@@ -43,22 +45,22 @@
                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                   <li><a class="dropdown-item" href="#">Info</a></li>
                   <li><a class="dropdown-item" href="#">Rules</a></li>
-                  {% comment %} <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="#">Something else here</a></li> {% endcomment %}
                 </ul>
               </li>
             </ul>
-            <span class="navbar-text">
+            <span class="navbar-text" style="width: 40%">
               <table align="right">
                 {% if not user.is_authenticated %}
                   <tr>
-                    <td><a class="nav-item" href="{% url 'login' %}">Log in</a></td>
-                    <td><a class="nav-item" href="{% url 'django_registration_register' %}">Sign up</a></td>
+                    <td style="width: 68%" align="right"><a class="btn btn-light btn-sm" style="width: 70px" href="{% url 'login' %}">Log in</a></td>
+                    <td style="width: 2%"></td>
+                    <td style="width: 25%"><a class="btn btn-light btn-sm" style="width: 70px" href="{% url 'django_registration_register' %}">Sign up</a></td>
                   </tr>
                 {% else %}
                   <tr>
-                    <td></td>
-                    <td><a class="nav-item" href="{% url 'logout' %}">Log out</a></td>
+                    <td style="width: 68%" align="right">Hello, {{ user.username }}.</td>
+                    <td style="width: 2%"></td>
+                    <td style="width: 25%"><a class="btn btn-light btn-sm" style="width: 70px" href="{% url 'logout' %}">Log out</a></td>
                   </tr>
                 {% endif %}
               </table>
@@ -75,33 +77,27 @@
       <br>
 
       <!-- Footer -->
-      <footer class="text-center text-lg-start bg-light text-muted">
+      <footer class="text-center text-lg-start bg-light text-muted fixed-bottom">
         <!-- Section: Social media -->
         <section class="d-flex justify-content-center justify-content-lg-between p-4 border-bottom">
           <!-- Left -->
           <div class="me-5 d-none d-lg-block">
-            <span>Something something here</span>
+            <span>© 2023 by Rich Barton-Cooper</span>
           </div>
           <!-- Left -->
 
           <!-- Right -->
           <div>
-            <a href="" class="me-4 text-reset">
+            <a href="https://www.linkedin.com/in/rich-cooper/" class="me-4 text-reset" target="_blank">
               <i class="fab fa-linkedin"></i>
             </a>
-            <a href="" class="me-4 text-reset">
+            <a href="https://github.com/richcooper95" class="me-4 text-reset" target="_blank">
               <i class="fab fa-github"></i>
             </a>
           </div>
           <!-- Right -->
         </section>
         <!-- Section: Social media -->
-
-        <!-- Copyright -->
-        <div class="text-center p-4" style="background-color: rgba(0, 0, 0, 0.05);">
-          © 2023 by Rich Barton-Cooper
-        </div>
-        <!-- Copyright -->
       </footer>
       <!-- Footer -->
     </body>

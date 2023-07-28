@@ -5,20 +5,24 @@
 {% block content %}
   <div class="container-fluid">
 	  <h4 align="center">Games</h4>
-    <a role="button" class="btn btn-secondary" href="{% url 'game_create' %}">+ New</a>
-		<br>
+    <br>
+    <div align="center">
+      <a role="button" style="width: 120px" class="btn btn-secondary" href="{% url 'game_create' %}">+ New</a>
+		</div>
 		<br>
     <h5>Ongoing</h5>
 		{% if ongoing_games|length == 0 %}
-      <p align="center">No games in progress. Start one with <b>+ New</b> above.</p>
+      <div class="alert alert-info" style="width: 100%; text-align: center" role="alert">
+        No games in progress. Start one with <b>+ New</b> above.
+      </div>
     {% else %}
-      <table class="table table-hover">
+      <table class="table table-hover align-middle">
         <tr>
-          <th scope="col">Name</th>
-          <th scope="col">Players</th>
-          <th scope="col">Created</th>
-          <th scope="col" align="right"></th>
-          <th scope="col" align="right"></th>
+          <th style="width: 30%" scope="col">Name</th>
+          <th style="width: 35%" scope="col">Players</th>
+          <th style="width: 15%" scope="col">Created</th>
+          <th style="width: 10%" scope="col" align="right"></th>
+          <th style="width: 10%" scope="col" align="right"></th>
         </tr>
         {% for game in ongoing_games %}
           <tr>
@@ -26,10 +30,10 @@
             <td>{{ game.player_names }}</td>
             <td>{{ game.inserted_at|date }}</td>
             <td>
-              <a href="{% url 'game_show' game.id %}" method="GET">Continue</a>
+              <a role="button" style="width: 100px" class="btn btn-secondary btn-sm" href="{% url 'game_show' game.id %}">Continue</a>
             </td>
             <td>
-              <a href="{% url 'game_delete' game.id %}" method="DELETE">Delete</a>
+              <a role="button" style="width: 100px" class="btn btn-danger btn-sm" href="{% url 'game_delete' game.id %}">Delete</a>
             </td>
           </tr>
         {% endfor %}
@@ -42,15 +46,17 @@
 
 	  <h5>Completed</h5>
 		{% if completed_games|length == 0 %}
-			<p align="center">No games have completed yet!</p>
+      <div class="alert alert-info" style="width: 100%; text-align: center" role="alert">
+        No games have completed yet!
+      </div>
 		{% else %}
     <table class="table">
       <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Players</th>
-        <th scope="col">Created</th>
-        <th scope="col">Winner</th>
-        <th scope="col" align="right"></th>
+        <th style="width: 30%" scope="col">Name</th>
+        <th style="width: 35%" scope="col">Players</th>
+        <th style="width: 15%" scope="col">Created</th>
+        <th style="width: 10%" scope="col">Winner</th>
+        <th style="width: 10%" scope="col" align="right"></th>
       </tr>
       {% for game in completed_games %}
         <tr>
@@ -59,7 +65,7 @@
           <td>{{ game.inserted_at|date }}</td>
           <td>{{ game.winning_player }}</td>
           <td>
-					  <a href="{% url 'game_delete' game.id %}" method="DELETE">Delete</a>
+					  <a role="button" style="width: 100px" class="btn btn-danger btn-sm" href="{% url 'game_delete' game.id %}" method="DELETE">Delete</a>
 					</td>
         </tr>
       {% endfor %}

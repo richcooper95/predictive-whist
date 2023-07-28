@@ -19,12 +19,14 @@ from django.urls import include, path
 
 from apps.games.views import (
     GameDeleteView,
+    GameRoundPredictionView,
+    GameRoundScoreView,
     GameShowView,
-    GamesView,
+    GameListView,
     GameCreateView,
     PlayerCreateView,
     PlayerDeleteView,
-    PlayersView,
+    PlayerListView,
 )
 from apps.home.views import HomeView
 
@@ -32,12 +34,14 @@ urlpatterns = [
     path("accounts/", include("django_registration.backends.one_step.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     path("", HomeView.as_view(), name="home"),
-    path("players/", PlayersView.as_view(), name="players"),
+    path("players/", PlayerListView.as_view(), name="players"),
     path("players/new/", PlayerCreateView.as_view(), name="player_create"),
     path("players/delete/<int:pk>/", PlayerDeleteView.as_view(), name="player_delete"),
-    path("games/", GamesView.as_view(), name="games"),
+    path("games/", GameListView.as_view(), name="games"),
     path("games/<int:pk>/", GameShowView.as_view(), name="game_show"),
-    path("games/new/", GameCreateView.as_view(), name="game_create"),
+    path("games/new/<", GameCreateView.as_view(), name="game_create"),
     path("games/delete/<int:pk>/", GameDeleteView.as_view(), name="game_delete"),
+    path("games/<int:game_id>/round/<int:round_id>/bids/", GameRoundPredictionView.as_view(), name="game_round_bids"),
+    path("games/<int:game_id>/round/<int:round_id>/scores/", GameRoundScoreView.as_view(), name="game_round_scores"),
     path("admin/", admin.site.urls),
 ]

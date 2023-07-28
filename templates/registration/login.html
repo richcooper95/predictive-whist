@@ -10,10 +10,10 @@
 
   {% if next %}
     {% if user.is_authenticated %}
-      <p style="color: LightCoral">Your account doesn't have access to this page. To proceed,
+      <p align="center" style="color: LightCoral">Your account doesn't have access to this page. To proceed,
       please login with an account that has access.</p>
     {% else %}
-      <p style="color: LightCoral">Please login to see this page.</p>
+      <p align="center" style="color: LightCoral">Please login to see this page.</p>
     {% endif %}
   {% endif %}
 
@@ -23,15 +23,17 @@
       <table>
         <tr>
           <td>{{ form.username.label_tag }}</td>
+          <td></td>
           <td>{{ form.username }}</td>
         </tr>
         <tr>
           <td>{{ form.password.label_tag }}</td>
+          <td></td>
           <td>{{ form.password }}</td>
         </tr>
       </table>
       </br>
-      <input class="button" type="submit" value="Log in">
+      <input class="btn btn-secondary" style="width: 120px" type="submit" value="Log in">
       <input type="hidden" name="next" value="{{ next }}">
     </form>
 

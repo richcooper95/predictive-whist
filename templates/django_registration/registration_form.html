@@ -2,36 +2,26 @@
 
 {% block title %}Sign up{% endblock %}
 
+{% load crispy_forms_tags %}
 {% load i18n %}
 
 {% block content %}
-  <form method="post" action=".">
-    {% csrf_token %}
-    <table align="center">
-      {% for field in form %}
-        <tr>
-          <td align="right">{{ field.label_tag }}</td>
-          <td></td>
-          <td>{{ field }}</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td></td>
-          <td align="left">
-            {% if field.help_text %}
-              <small style="color: grey">{{ field.help_text }}</small>
-            {% endif %}
-            {% for error in field.errors %}
-              <p style="color: LightCoral">{{ error }}</p>
-            {% endfor %}
-          </td>
-        </tr>
-      {% endfor %}
-      <tr>
-        <td></td>
-        <td></td>
-        <td align="left"><input class="button" type="submit" value="{% trans 'Register' %}" /></td>
-      </tr>
-    </table>
-  </form>
+  <table class="table table-borderless">
+    <tr>
+      <td>
+        <form method="post" action=".">
+          {% csrf_token %}
+          <table align="center">
+            {{ form|crispy }}
+          </table>
+          <input class="btn btn-secondary" style="width: 120px" type="submit" value="{% trans 'Register' %}" />
+        </form>
+      </td>
+    </tr>
+    <tr class="align-middle" align="center">
+      <td style="width: 45%">
+        <img src="/static/images/aces.png" width="40%">
+      </td>
+    </tr>
+  </table>
 {% endblock %}

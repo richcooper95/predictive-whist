@@ -1,18 +1,27 @@
 from django import forms
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from apps.games.models import Game, Player
 
 
 class GameModelForm(forms.ModelForm):
     players = forms.ModelMultipleChoiceField(
-        queryset=Player.objects.all(),
+        queryset=None,
         widget=forms.CheckboxSelectMultiple,
         required=True,
     )
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super(GameModelForm, self).__init__(*args, **kwargs)
+
+        self.fields["players"].queryset = Player.objects.filter(
+            created_by_user=self.user
+        ).all()
+
     class Meta:
         model = Game
-        exclude = ["is_ongoing", "inserted_at", "updated_at"]
+        exclude = ["is_ongoing", "card_number_descending", "created_by_user", "inserted_at", "updated_at"]
 
     def clean_players(self):
         players = self.cleaned_data["players"]
@@ -70,3 +79,78 @@ class PlayerModelForm(forms.ModelForm):
     class Meta:
         model = Player
         exclude = ["created_by_user", "inserted_at", "updated_at"]
+
+
+class GameRoundPredictionForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        self.card_number = kwargs.pop('card_number')
+
+        round_players = kwargs.pop('round_players')
+
+        super().__init__(*args, **kwargs)
+
+        for round_player in round_players:
+            field_name = f'tricks_predicted_{round_player.game_player.player_number}'
+            self.fields[field_name] = forms.IntegerField(
+                required=True,
+                initial=round_player.tricks_predicted,
+                validators=[MaxValueValidator(self.card_number), MinValueValidator(0)]
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if sum(cleaned_data.values()) == self.card_number:
+            raise forms.ValidationError(
+                "The total number of tricks predicted must not be equal to "
+                f"{self.card_number}. The dealer must choose a different bid."
+            )
+
+        if any(x > self.card_number for x in cleaned_data.values()):
+            raise forms.ValidationError(
+                f"No individual bid can be greater than {self.card_number}."
+            )
+
+        if any(x < 0 for x in cleaned_data.values()):
+            raise forms.ValidationError(
+                f"No bid can be less than 0."
+            )
+
+        return cleaned_data
+
+
+class GameRoundScoreForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        self.card_number = kwargs.pop('card_number')
+
+        round_players = kwargs.pop('round_players')
+
+        super().__init__(*args, **kwargs)
+
+        for round_player in round_players:
+            field_name = f'tricks_won_{round_player.game_player.player_number}'
+            self.fields[field_name] = forms.IntegerField(
+                required=True,
+                initial=round_player.tricks_won,
+                validators=[MaxValueValidator(self.card_number), MinValueValidator(0)]
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if sum(cleaned_data.values()) != self.card_number:
+            raise forms.ValidationError(
+                f"The total number of tricks scored must be equal to {self.card_number}."
+            )
+
+        if any(x > self.card_number for x in cleaned_data.values()):
+            raise forms.ValidationError(
+                f"No individual score can be greater than {self.card_number}."
+            )
+
+        if any(x < 0 for x in cleaned_data.values()):
+            raise forms.ValidationError(
+                f"No score can be less than 0."
+            )
+
+        return cleaned_data

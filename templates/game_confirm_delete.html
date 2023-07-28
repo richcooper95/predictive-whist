@@ -7,6 +7,13 @@
   <form method="post" align="center">
     {% csrf_token %}
       <p>Are you sure you want to delete the game <strong>{{ game.name }}</strong>?</p>
-      <input type="submit" value="Delete" class="btn btn-danger">
+      <table align="center">
+        <tr>
+          <td><input style="width: 120px" type="submit" value="Delete" class="btn btn-danger"></td>
+          <td></td>
+          <td></td>
+          <td><button style="width: 120px" onclick="window.history.back();" class="btn btn-secondary" type="button">Cancel</a></td>
+        </tr>
+    </table>
   </form>
 {% endblock %}

@@ -4,6 +4,9 @@
   - place bids:
     - allow each player's bid to be entered (max. is all hands in round; cannot add up to
       the number of cards in round)
+      - show row under the score table, with a textbox for the current player
+      - show 'Next' button under the textbox
+      - show bids for each player in their row
     - submit: redirect back to game_show.html (having saved the bids in each
       GameRoundGamePlayer and the total in the GameRound)
     - use whether total_tricks_predicted has been set in the latest_game_round to dictate

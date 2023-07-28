@@ -1,59 +1,49 @@
-{% extends "base.html" %}
+{% extends "game_base.html" %}
 
-{% block title %}Game: {{game.name}}{% endblock %}
+{% block game_round_content %}
+  <table class="table">
+    <tr class="table-secondary">
+      <th></th>
+      {% for game_player in game_players %}
+        <th>{{game_player.player.name}}</th>
+      {% endfor %}
+    </tr>
+    <tr>
+      <th>Score</th>
+      {% for game_player in game_players %}
+        <td>
+          {{game_player.score}}
+        </td>
+      {% endfor %}
+  </table>
 
-{% block content %}
-  <div class="container-fluid">
-	  <h4 align="center"><strong>Playing:</strong> {{game.name}}</h4>
-    <table class="table table-light table-borderless" align="center">
-      <tr>
-        <td align="center"><strong>Created:</strong> {{game.inserted_at}}</td>
-      </tr>
-    </table>
+  {% if not game.is_ongoing %}
+    <br>
+    <h3 align="center">Congratulations, {{ winning_players }}! 🥳</h3>
 
-    <table class="table table-light table-borderless" align="center">
-      <tr>
-        <td align="center"><strong>Round:</strong> {{latest_game_round.round_number}}</td>
-        <td align="center"><strong>Trumps:</strong> {{trump_suit|safe}}</td>
-        <td align="center"><strong>Cards:</strong> {{latest_game_round.card_number}}</td>
-        <td align="center"><strong>Dealer:</strong> {{dealer_name}}</td>
-        <td align="center"><strong>Leader:</strong> {{current_winning_player.player.name}}</td>
-      </tr>
-    </table>
-
-    <table class="table">
-      <tr class="table-secondary">
-        <th></th>
-        {% for game_player in game_players %}
-          <th>{{game_player.player.name}}</th>
-        {% endfor %}
-      </tr>
-      <tr>
-        <th>Score</th>
-        {% for game_player in game_players %}
-          <td>
-            {% if game_player.player.id == current_winning_player.player.id %}
-              <strong>{{game_player.score}}</strong>
-            {% else %}
-              {{game_player.score}}
-            {% endif %}
-          </td>
-        {% endfor %}
-    </table>
+    <p align="center">That was fun! Want to play a new game?</p>
 
     <table class="table table-borderless">
       <tr>
         <td align="center">
-          <a role="button" class="btn btn-secondary" href="{% url 'game_delete' game.id %}">Place bids</a>
+          <a role="button" style="width: 120px" class="btn btn-secondary" href="{% url 'game_create' %}">Play again</a>
         </td>
         <td align="center">
-          <a role="button" class="btn btn-secondary" href="{% url 'game_delete' game.id %}">Add scores</a>
-        </td>
-        <td align="center">
-          <a role="button" class="btn btn-danger" href="{% url 'game_delete' game.id %}">Delete game</a>
+          <a role="button" style="width: 120px" class="btn btn-danger" href="{% url 'game_delete' game.id %}">Delete game</a>
         </td>
       </tr>
     </table>
+  {% else %}
+    <table align="center" style="width: 25%" class="table table-borderless">
+      <tr>
+        <td align="center">
+          <a style="width: 120px" role="button" class="btn btn-secondary" href="{% url 'game_round_bids' game.id latest_game_round.id %}">Next round</a>
+        </td>
+        <td align="center">
+          <a style="width: 120px" role="button" class="btn btn-danger" href="{% url 'game_delete' game.id %}">Delete game</a>
+        </td>
+      </tr>
+    </table>
+  {% endif %}
 
-  </div>
 {% endblock %}

@@ -11,13 +11,19 @@ class Player(models.Model):
     def __str__(self):
         return self.name
 
+    def visible_to(self, user):
+        return self.created_by_user == user or user.is_superuser
+
 
 class Game(models.Model):
     name = models.CharField(max_length=255)
     is_ongoing = models.BooleanField(default=True)
     correct_prediction_points = models.IntegerField(default=5)
     starting_round_card_number = models.IntegerField()
+    card_number_descending = models.BooleanField(default=True)
     number_of_decks = models.IntegerField(default=1)
+
+    created_by_user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     players = models.ManyToManyField(Player, through="GamePlayer")
 
     inserted_at = models.DateTimeField(auto_now_add=True)
@@ -25,6 +31,9 @@ class Game(models.Model):
 
     def __str__(self):
         return self.name
+
+    def visible_to(self, user):
+        return self.created_by_user == user or user.is_superuser
 
 
 class GamePlayer(models.Model):
@@ -41,6 +50,9 @@ class GamePlayer(models.Model):
 
     def __str__(self):
         return str(self.game_id) + " - " + str(self.player_id)
+
+    def visible_to(self, user):
+        return self.game.visible_to(user)
 
 
 class GameRound(models.Model):
@@ -64,6 +76,9 @@ class GameRound(models.Model):
     inserted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def visible_to(self, user):
+        return self.game.visible_to(user)
+
 
 class GameRoundGamePlayer(models.Model):
     game_round = models.ForeignKey(GameRound, on_delete=models.CASCADE)
@@ -76,3 +91,6 @@ class GameRoundGamePlayer(models.Model):
 
     def __str__(self):
         return str(self.game_round_id) + " - " + str(self.game_player_id)
+
+    def visible_to(self, user):
+        return self.game_round.game.visible_to(user)

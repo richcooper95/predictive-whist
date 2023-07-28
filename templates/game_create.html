@@ -7,13 +7,18 @@
 {% block content %}
   <div class="container-fluid">
     <h4 align="center">New Game</h4>
-    <form action="" method="post">
-      {% csrf_token %}
-      <table>
-      {{ form|crispy }}
-      </table>
-      <input type="submit" value="Create game">
-    </form>
-
+    {% if user_player_count < 2 %}
+      <div class="alert alert-info" style="width: 100%; text-align: center" role="alert">
+        You need to create at least two players in the <strong>Players</strong> tab before you can create a game.
+      </div>
+    {% else %}
+      <form action="" method="post">
+        {% csrf_token %}
+        <table>
+        {{ form|crispy }}
+        </table>
+        <button style="width: 120px" type="submit" class="btn btn-secondary">Create</button>
+      </form>
+    {% endif %}
   </div>
 {% endblock %}

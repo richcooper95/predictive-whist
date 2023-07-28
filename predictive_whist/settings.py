@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "fontawesomefree",
     "crispy_forms",
     "crispy_bootstrap5",
+    'widget_tweaks',
     "apps.home.apps.HomeConfig",
     "apps.games.apps.GamesConfig",
 ]

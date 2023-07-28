@@ -5,28 +5,36 @@
 {% block content %}
   <div class="container-fluid">
   <h4 align="center">Players</h4>
-    <a role="button" class="btn btn-secondary" href="{% url 'player_create' %}">+ New</a>
 		<br>
+    <div align="center">
+      <a role="button" style="width: 120px" class="btn btn-secondary" href="{% url 'player_create' %}">+ New</a>
+		</div>
 		<br>
-    <table class="table table-hover">
-      <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Created</th>
-        <th scope="col">Ongoing games</th>
-        <th scope="col">Completed games</th>
-        <th scope="col" align="right"></th>
-      </tr>
-      {% for player in players %}
+		{% if players|length == 0 %}
+      <div class="alert alert-info" style="width: 100%; text-align: center" role="alert">
+        No players yet. Add one with <b>+ New</b> above.
+      </div>
+    {% else %}
+      <table class="table table-hover">
         <tr>
-          <td>{{ player.name }}</td>
-          <td>{{ player.inserted_at|date }}</td>
-          <td>{{ player.ongoing_games }}</td>
-          <td>{{ player.completed_games }}</td>
-          <td>
-            <a href="{% url 'player_delete' player.id %}" method="DELETE">Delete</a>
-          </td>
+          <th scope="col">Name</th>
+          <th scope="col">Created</th>
+          <th scope="col">Ongoing games</th>
+          <th scope="col">Completed games</th>
+          <th scope="col" align="right"></th>
         </tr>
-      {% endfor %}
-    </table>
+        {% for player in players %}
+          <tr>
+            <td>{{ player.name }}</td>
+            <td>{{ player.inserted_at|date }}</td>
+            <td>{{ player.ongoing_games }}</td>
+            <td>{{ player.completed_games }}</td>
+            <td>
+              <a role="button" style="width: 100px" class="btn btn-danger btn-sm" href="{% url 'player_delete' player.id %}" method="DELETE">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
   </div>
 {% endblock %}

@@ -8,8 +8,8 @@
 {% block game_round_content %}
   <div class="container-fluid">
     <br>
-    <h5 align="center">Round {{latest_game_round.round_number}}: Bids</h5>
-    <small><i>Players are shown in the order they should bid.</i></small>
+    <h5 align="center">Round {{latest_game_round.round_number}}: Scores</h5>
+    <small><i>Players are shown in the order they played this round.</i></small>
     <form method="post" align="center">
       {% csrf_token %}
       <table class="table">
@@ -23,7 +23,7 @@
         </thead>
         <tbody>
           <tr>
-            <td  class="align-middle"><strong>Prediction</strong></td>
+            <td class="align-middle"><strong>Tricks</strong></td>
             {% for field in form.visible_fields %}
               <td>
                 {% if form.is_bound %}
@@ -55,7 +55,7 @@
       <table align="center" style="width: 25%" class="table table-borderless">
         <tr>
           <td align="center">
-            <a style="width: 120px" role="button" class="btn btn-secondary" href="{% url 'game_show' game.id %}">Back</a>
+            <a style="width: 120px" role="button" class="btn btn-secondary" href="{% url 'game_round_bids' game.id latest_game_round.id %}">Edit bids</a>
           </td>
           <td align="center">
             <button type="submit" style="width: 120px" class="btn btn-secondary">Save</button>
