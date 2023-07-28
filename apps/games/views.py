@@ -43,7 +43,7 @@ def get_next_trump_suit(trump_suit):
     return "H"
 
 
-class PlayerListView(TemplateView, LoginRequiredMixin):
+class PlayerListView(LoginRequiredMixin, TemplateView):
     template_name = "player_list.html"
 
     def get(self, request, *args, **kwargs):
@@ -63,7 +63,7 @@ class PlayerListView(TemplateView, LoginRequiredMixin):
         return render(request, self.template_name, {"players": players})
 
 
-class PlayerCreateView(CreateView, LoginRequiredMixin):
+class PlayerCreateView(LoginRequiredMixin, CreateView):
     template_name = "player_create.html"
     form_class = PlayerModelForm
 
@@ -74,7 +74,7 @@ class PlayerCreateView(CreateView, LoginRequiredMixin):
         return HttpResponseRedirect("/players")
 
 
-class PlayerDeleteView(DeleteView, LoginRequiredMixin, SuccessMessageMixin):
+class PlayerDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
     model = Player
     success_url = "/players"
     # TODO: This doesn't work. Why?
@@ -82,7 +82,7 @@ class PlayerDeleteView(DeleteView, LoginRequiredMixin, SuccessMessageMixin):
     template_name = "player_confirm_delete.html"
 
 
-class GameListView(TemplateView, LoginRequiredMixin):
+class GameListView(LoginRequiredMixin, TemplateView):
     template_name = "game_list.html"
 
     def get(self, request, *args, **kwargs):
@@ -121,7 +121,7 @@ class GameListView(TemplateView, LoginRequiredMixin):
         )
 
 
-class GameCreateView(CreateView, LoginRequiredMixin):
+class GameCreateView(LoginRequiredMixin, CreateView):
     template_name = "game_create.html"
     form_class = GameModelForm
 
@@ -179,7 +179,7 @@ class GameCreateView(CreateView, LoginRequiredMixin):
         return HttpResponseRedirect(f"/games/{game.id}")
 
 
-class GameDeleteView(DeleteView, LoginRequiredMixin, SuccessMessageMixin):
+class GameDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
     model = Game
     success_url = "/games"
     # TODO: This doesn't work. Why?
@@ -222,9 +222,17 @@ class GameShowView(LoginRequiredMixin, TemplateView):
         )
 
 
-class GameRoundPredictionView(FormView):
+class GameRoundPredictionView(LoginRequiredMixin, FormView):
     template_name = "game_round_bids.html"
     form_class = GameRoundPredictionForm
+
+    def get(self, request, *args, **kwargs):
+        game_round = get_object_or_404(GameRound, pk=self.kwargs["round_id"])
+
+        if not game_round.visible_to(self.request.user):
+            return HttpResponseForbidden()
+
+        return super().get(request, *args, **kwargs)
 
     def get_success_url(self):
         return self.request.path
@@ -300,7 +308,7 @@ class GameRoundPredictionView(FormView):
         return HttpResponseRedirect(f"/games/{game_round.game.id}/round/{game_round.id}/scores/")
 
 
-class GameRoundScoreView(FormView):
+class GameRoundScoreView(LoginRequiredMixin, FormView):
     template_name = "game_round_scores.html"
     form_class = GameRoundScoreForm
 
