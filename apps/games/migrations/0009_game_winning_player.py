@@ -5,15 +5,19 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('games', '0008_game_card_number_descending_and_more'),
+        ("games", "0008_game_card_number_descending_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='game',
-            name='winning_player',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='winning_players', to='games.player'),
+            model_name="game",
+            name="winning_player",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="winning_players",
+                to="games.player",
+            ),
         ),
     ]

@@ -21,7 +21,13 @@ class GameModelForm(forms.ModelForm):
 
     class Meta:
         model = Game
-        exclude = ["is_ongoing", "card_number_descending", "created_by_user", "inserted_at", "updated_at"]
+        exclude = [
+            "is_ongoing",
+            "card_number_descending",
+            "created_by_user",
+            "inserted_at",
+            "updated_at",
+        ]
 
     def clean_players(self):
         players = self.cleaned_data["players"]
@@ -60,7 +66,10 @@ class GameModelForm(forms.ModelForm):
         starting_round_card_number = cleaned_data.get("starting_round_card_number")
         number_of_decks = cleaned_data.get("number_of_decks")
 
-        if all(x is not None for x in [players, starting_round_card_number, number_of_decks]):
+        if all(
+            x is not None
+            for x in [players, starting_round_card_number, number_of_decks]
+        ):
             max_starting_round_card_number = (number_of_decks * 52) // len(players)
 
             if starting_round_card_number < 1 or starting_round_card_number > 13:
@@ -83,18 +92,18 @@ class PlayerModelForm(forms.ModelForm):
 
 class GameRoundPredictionForm(forms.Form):
     def __init__(self, *args, **kwargs):
-        self.card_number = kwargs.pop('card_number')
+        self.card_number = kwargs.pop("card_number")
 
-        round_players = kwargs.pop('round_players')
+        round_players = kwargs.pop("round_players")
 
         super().__init__(*args, **kwargs)
 
         for round_player in round_players:
-            field_name = f'tricks_predicted_{round_player.game_player.player_number}'
+            field_name = f"tricks_predicted_{round_player.game_player.player_number}"
             self.fields[field_name] = forms.IntegerField(
                 required=True,
                 initial=round_player.tricks_predicted,
-                validators=[MaxValueValidator(self.card_number), MinValueValidator(0)]
+                validators=[MaxValueValidator(self.card_number), MinValueValidator(0)],
             )
 
     def clean(self):
@@ -112,27 +121,25 @@ class GameRoundPredictionForm(forms.Form):
             )
 
         if any(x < 0 for x in cleaned_data.values()):
-            raise forms.ValidationError(
-                f"No bid can be less than 0."
-            )
+            raise forms.ValidationError(f"No bid can be less than 0.")
 
         return cleaned_data
 
 
 class GameRoundScoreForm(forms.Form):
     def __init__(self, *args, **kwargs):
-        self.card_number = kwargs.pop('card_number')
+        self.card_number = kwargs.pop("card_number")
 
-        round_players = kwargs.pop('round_players')
+        round_players = kwargs.pop("round_players")
 
         super().__init__(*args, **kwargs)
 
         for round_player in round_players:
-            field_name = f'tricks_won_{round_player.game_player.player_number}'
+            field_name = f"tricks_won_{round_player.game_player.player_number}"
             self.fields[field_name] = forms.IntegerField(
                 required=True,
                 initial=round_player.tricks_won,
-                validators=[MaxValueValidator(self.card_number), MinValueValidator(0)]
+                validators=[MaxValueValidator(self.card_number), MinValueValidator(0)],
             )
 
     def clean(self):
@@ -149,8 +156,6 @@ class GameRoundScoreForm(forms.Form):
             )
 
         if any(x < 0 for x in cleaned_data.values()):
-            raise forms.ValidationError(
-                f"No score can be less than 0."
-            )
+            raise forms.ValidationError(f"No score can be less than 0.")
 
         return cleaned_data

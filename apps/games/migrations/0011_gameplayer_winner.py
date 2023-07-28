@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('games', '0010_remove_game_winning_player'),
+        ("games", "0010_remove_game_winning_player"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='gameplayer',
-            name='winner',
+            model_name="gameplayer",
+            name="winner",
             field=models.BooleanField(default=False),
         ),
     ]

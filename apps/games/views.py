@@ -7,7 +7,12 @@ from django.shortcuts import get_object_or_404, render
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, DeleteView, FormView
 
-from .forms import GameModelForm, GameRoundPredictionForm, GameRoundScoreForm, PlayerModelForm
+from .forms import (
+    GameModelForm,
+    GameRoundPredictionForm,
+    GameRoundScoreForm,
+    PlayerModelForm,
+)
 from .models import GameRound, GameRoundGamePlayer, Player, Game, GamePlayer
 
 
@@ -26,6 +31,7 @@ def trump_suit_to_emoji(trump_suit):
         return "♣️"
 
     return "🃏"
+
 
 def get_next_trump_suit(trump_suit):
     if trump_suit == "H":
@@ -49,7 +55,11 @@ class PlayerListView(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         players = Player.objects.filter(created_by_user=self.request.user).all()
 
-        game_players = GamePlayer.objects.select_related("player", "game").filter(player__created_by_user=self.request.user).all()
+        game_players = (
+            GamePlayer.objects.select_related("player", "game")
+            .filter(player__created_by_user=self.request.user)
+            .all()
+        )
 
         for player in players:
             player.ongoing_games = game_players.filter(
@@ -146,8 +156,12 @@ class GameCreateView(LoginRequiredMixin, CreateView):
             game = Game.objects.create(
                 name=form.cleaned_data["name"],
                 is_ongoing=True,
-                correct_prediction_points=form.cleaned_data["correct_prediction_points"],
-                starting_round_card_number=form.cleaned_data["starting_round_card_number"],
+                correct_prediction_points=form.cleaned_data[
+                    "correct_prediction_points"
+                ],
+                starting_round_card_number=form.cleaned_data[
+                    "starting_round_card_number"
+                ],
                 number_of_decks=form.cleaned_data["number_of_decks"],
                 created_by_user=self.request.user,
             )
@@ -196,12 +210,16 @@ class GameShowView(LoginRequiredMixin, TemplateView):
         if not game.visible_to(self.request.user):
             return HttpResponseForbidden()
 
-        game_players = GamePlayer.objects.select_related("game", "player").filter(game=game).all()
+        game_players = (
+            GamePlayer.objects.select_related("game", "player").filter(game=game).all()
+        )
         max_score = game_players.aggregate(Max("score"))["score__max"]
         winning_players = ", ".join(
             game_players.filter(score=max_score).values_list("player__name", flat=True)
         )
-        latest_game_round = GameRound.objects.filter(game=game).order_by("round_number").last()
+        latest_game_round = (
+            GameRound.objects.filter(game=game).order_by("round_number").last()
+        )
 
         dealer_player_number = latest_game_round.round_number % len(game_players) + 1
 
@@ -217,7 +235,9 @@ class GameShowView(LoginRequiredMixin, TemplateView):
                 "winning_players": winning_players,
                 "latest_game_round": latest_game_round,
                 "trump_suit": trump_suit_to_emoji(latest_game_round.trump_suit),
-                "dealer_name": game_players.get(player_number=dealer_player_number).player.name,
+                "dealer_name": game_players.get(
+                    player_number=dealer_player_number
+                ).player.name,
             },
         )
 
@@ -241,11 +261,18 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         kwargs = super().get_form_kwargs()
         game_round = get_object_or_404(GameRound, pk=self.kwargs["round_id"])
 
-        round_players = list(GameRoundGamePlayer.objects.select_related("game_round", "game_player").filter(game_round=game_round).order_by("game_player__player_number").all())
+        round_players = list(
+            GameRoundGamePlayer.objects.select_related("game_round", "game_player")
+            .filter(game_round=game_round)
+            .order_by("game_player__player_number")
+            .all()
+        )
 
         starting_player_idx = game_round.round_number % len(round_players) + 1
 
-        round_players = round_players[starting_player_idx:] + round_players[:starting_player_idx]
+        round_players = (
+            round_players[starting_player_idx:] + round_players[:starting_player_idx]
+        )
 
         kwargs["round_players"] = round_players
         kwargs["card_number"] = game_round.card_number
@@ -256,30 +283,41 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         context = super(GameRoundPredictionView, self).get_context_data(**kwargs)
 
         game = get_object_or_404(Game, id=self.kwargs["game_id"])
-        game_players = GamePlayer.objects.select_related("game", "player").filter(game=game).all()
+        game_players = (
+            GamePlayer.objects.select_related("game", "player").filter(game=game).all()
+        )
         max_score = game_players.aggregate(Max("score"))["score__max"]
-        latest_game_round = GameRound.objects.filter(game=game).order_by("round_number").last()
-        round_players = list(GameRoundGamePlayer.objects.select_related("game_round", "game_player").filter(game_round=latest_game_round).order_by("game_player__player_number").all())
+        latest_game_round = (
+            GameRound.objects.filter(game=game).order_by("round_number").last()
+        )
+        round_players = list(
+            GameRoundGamePlayer.objects.select_related("game_round", "game_player")
+            .filter(game_round=latest_game_round)
+            .order_by("game_player__player_number")
+            .all()
+        )
 
         starting_player_idx = latest_game_round.round_number % len(game_players) + 1
 
-        round_players = round_players[starting_player_idx:] + round_players[:starting_player_idx]
+        round_players = (
+            round_players[starting_player_idx:] + round_players[:starting_player_idx]
+        )
 
         dealer_player_number = latest_game_round.round_number % len(game_players) + 1
 
         context["game"] = game
         context["game_players"] = game_players
         context["game_player_names"] = ", ".join(
-                    game_players.values_list("player__name", flat=True)
-                )
+            game_players.values_list("player__name", flat=True)
+        )
         context["winning_players"] = ", ".join(
-                    game_players.filter(score=max_score).values_list("player__name", flat=True)
-                )
+            game_players.filter(score=max_score).values_list("player__name", flat=True)
+        )
         context["latest_game_round"] = latest_game_round
         context["trump_suit"] = trump_suit_to_emoji(latest_game_round.trump_suit)
         context["dealer_name"] = game_players.get(
-                    player_number=dealer_player_number
-                ).player.name
+            player_number=dealer_player_number
+        ).player.name
         context["round_players"] = round_players
 
         return context
@@ -292,20 +330,27 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
                 player_number = round_player.split("_")[-1]
                 tricks_predicted = form.cleaned_data[round_player]
                 if tricks_predicted is not None:
-                    game_round_game_player, _ = GameRoundGamePlayer.objects.get_or_create(
-                        game_round=game_round, game_player__player_number=player_number,
-                        defaults={"tricks_predicted": tricks_predicted}
+                    (
+                        game_round_game_player,
+                        _,
+                    ) = GameRoundGamePlayer.objects.get_or_create(
+                        game_round=game_round,
+                        game_player__player_number=player_number,
+                        defaults={"tricks_predicted": tricks_predicted},
                     )
                     game_round_game_player.tricks_predicted = tricks_predicted
                     game_round_game_player.save()
 
             total_tricks_predicted = sum(
-                round_player.tricks_predicted for round_player in game_round.gameroundgameplayer_set.all()
+                round_player.tricks_predicted
+                for round_player in game_round.gameroundgameplayer_set.all()
             )
             game_round.total_tricks_predicted = total_tricks_predicted
             game_round.save()
 
-        return HttpResponseRedirect(f"/games/{game_round.game.id}/round/{game_round.id}/scores/")
+        return HttpResponseRedirect(
+            f"/games/{game_round.game.id}/round/{game_round.id}/scores/"
+        )
 
 
 class GameRoundScoreView(LoginRequiredMixin, FormView):
@@ -319,11 +364,18 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
         kwargs = super().get_form_kwargs()
         game_round = get_object_or_404(GameRound, pk=self.kwargs["round_id"])
 
-        round_players = list(GameRoundGamePlayer.objects.select_related("game_round", "game_player").filter(game_round=game_round).order_by("game_player__player_number").all())
+        round_players = list(
+            GameRoundGamePlayer.objects.select_related("game_round", "game_player")
+            .filter(game_round=game_round)
+            .order_by("game_player__player_number")
+            .all()
+        )
 
         starting_player_idx = game_round.round_number % len(round_players) + 1
 
-        round_players = round_players[starting_player_idx:] + round_players[:starting_player_idx]
+        round_players = (
+            round_players[starting_player_idx:] + round_players[:starting_player_idx]
+        )
 
         kwargs["round_players"] = round_players
         kwargs["card_number"] = game_round.card_number
@@ -334,30 +386,41 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
         context = super(GameRoundScoreView, self).get_context_data(**kwargs)
 
         game = get_object_or_404(Game, id=self.kwargs["game_id"])
-        game_players = GamePlayer.objects.select_related("game", "player").filter(game=game).all()
+        game_players = (
+            GamePlayer.objects.select_related("game", "player").filter(game=game).all()
+        )
         max_score = game_players.aggregate(Max("score"))["score__max"]
-        latest_game_round = GameRound.objects.filter(game=game).order_by("round_number").last()
-        round_players = list(GameRoundGamePlayer.objects.select_related("game_round", "game_player").filter(game_round=latest_game_round).order_by("game_player__player_number").all())
+        latest_game_round = (
+            GameRound.objects.filter(game=game).order_by("round_number").last()
+        )
+        round_players = list(
+            GameRoundGamePlayer.objects.select_related("game_round", "game_player")
+            .filter(game_round=latest_game_round)
+            .order_by("game_player__player_number")
+            .all()
+        )
 
         starting_player_idx = latest_game_round.round_number % len(game_players) + 1
 
-        round_players = round_players[starting_player_idx:] + round_players[:starting_player_idx]
+        round_players = (
+            round_players[starting_player_idx:] + round_players[:starting_player_idx]
+        )
 
         dealer_player_number = latest_game_round.round_number % len(game_players) + 1
 
         context["game"] = game
         context["game_players"] = game_players
         context["game_player_names"] = ", ".join(
-                    game_players.values_list("player__name", flat=True)
-                )
+            game_players.values_list("player__name", flat=True)
+        )
         context["winning_players"] = ", ".join(
-                    game_players.filter(score=max_score).values_list("player__name", flat=True)
-                )
+            game_players.filter(score=max_score).values_list("player__name", flat=True)
+        )
         context["latest_game_round"] = latest_game_round
         context["trump_suit"] = trump_suit_to_emoji(latest_game_round.trump_suit)
         context["dealer_name"] = game_players.get(
-                    player_number=dealer_player_number
-                ).player.name
+            player_number=dealer_player_number
+        ).player.name
         context["round_players"] = round_players
 
         return context
@@ -370,16 +433,25 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
                 player_number = round_player.split("_")[-1]
                 tricks_won = form.cleaned_data[round_player]
                 if tricks_won is not None:
-                    game_round_game_player, _ = GameRoundGamePlayer.objects.get_or_create(
-                        game_round=game_round, game_player__player_number=player_number,
-                        defaults={"tricks_won": tricks_won}
+                    (
+                        game_round_game_player,
+                        _,
+                    ) = GameRoundGamePlayer.objects.get_or_create(
+                        game_round=game_round,
+                        game_player__player_number=player_number,
+                        defaults={"tricks_won": tricks_won},
                     )
                     game_round_game_player.tricks_won = tricks_won
 
                     game_round_game_player.game_player.score += tricks_won
 
-                    if game_round_game_player.tricks_predicted == game_round_game_player.tricks_won:
-                        game_round_game_player.game_player.score += game_round.game.correct_prediction_points
+                    if (
+                        game_round_game_player.tricks_predicted
+                        == game_round_game_player.tricks_won
+                    ):
+                        game_round_game_player.game_player.score += (
+                            game_round.game.correct_prediction_points
+                        )
 
                     game_round_game_player.save()
                     game_round_game_player.game_player.save()
@@ -400,8 +472,6 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
             if next_round_card_number > game_round.game.starting_round_card_number:
                 game_round.game.is_ongoing = False
                 game_round.game.save()
-
-
 
                 # And we need to redirect to the game's homepage.
                 return HttpResponseRedirect(f"/games/{game_round.game.id}")
