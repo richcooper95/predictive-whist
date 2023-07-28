@@ -26,16 +26,16 @@
               </li>
 
               {% if user.is_authenticated %}
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'games' %}">Games</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'players' %}">Players</a>
-              </li>
-              {% comment %} TODO: Add some stats! {% endcomment %}
-              {% comment %} <li class="nav-item">
-                <a class="nav-link" href="#">Stats</a>
-              </li> {% endcomment %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'games' %}">Games</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'players' %}">Players</a>
+                </li>
+                {% comment %} TODO: Add some stats! {% endcomment %}
+                {% comment %} <li class="nav-item">
+                  <a class="nav-link" href="#">Stats</a>
+                </li> {% endcomment %}
               {% endif %}
 
               <li class="nav-item dropdown">
@@ -47,24 +47,25 @@
                   <li><a class="dropdown-item" href="#">Rules</a></li>
                 </ul>
               </li>
+
+              {% if user.is_authenticated %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                </li>
+              {% else %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'login' %}">Login</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'django_registration_register' %}">Register</a>
+                </li>
+              {% endif %}
             </ul>
-            <span class="navbar-text" style="width: 40%">
-              <table align="right">
-                {% if not user.is_authenticated %}
-                  <tr>
-                    <td style="width: 68%" align="right"><a class="btn btn-light btn-sm" style="width: 70px" href="{% url 'login' %}">Log in</a></td>
-                    <td style="width: 2%"></td>
-                    <td style="width: 25%"><a class="btn btn-light btn-sm" style="width: 70px" href="{% url 'django_registration_register' %}">Sign up</a></td>
-                  </tr>
-                {% else %}
-                  <tr>
-                    <td style="width: 68%" align="right">Hello, {{ user.username }}.</td>
-                    <td style="width: 2%"></td>
-                    <td style="width: 25%"><a class="btn btn-light btn-sm" style="width: 70px" href="{% url 'logout' %}">Log out</a></td>
-                  </tr>
-                {% endif %}
-              </table>
-            </span>
+            {% if user.is_authenticated %}
+              <span class="navbar-text">
+                Hello, {{ user.username }}.
+              </span>
+            {% endif %}
           </div>
         </div>
       </nav>
