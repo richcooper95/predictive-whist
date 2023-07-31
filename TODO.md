@@ -28,3 +28,6 @@
 
 ## URLs
 [x] change `games/<game_id>/round/<round_id>/{bids, scores}` to `games/<game_id>/round/<round_number>/{bids, scores}` - more intuitive!
+
+## General
+[] DRY things up (e.g. helper functions and view logic)
