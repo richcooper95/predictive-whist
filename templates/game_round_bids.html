@@ -7,7 +7,6 @@
 
 {% block game_round_content %}
   <div class="container-fluid">
-    <br>
     <h5 align="center">Round {{latest_game_round.round_number}}: Bids</h5>
     <small><i>Players are shown in the order they should bid.</i></small>
     <form method="post" align="center">
@@ -15,7 +14,7 @@
       <table class="table">
         <thead>
           <tr class="table-secondary">
-            <th style="width: 120px"></th>
+            <th style="width: 140px"></th>
             {% for round_player in round_players %}
               <th>{{round_player.game_player.player.name}}</th>
             {% endfor %}
@@ -55,10 +54,10 @@
       <table align="center" style="width: 25%" class="table table-borderless">
         <tr>
           <td align="center">
-            <a style="width: 120px" role="button" class="btn btn-secondary" href="{% url 'game_show' game.id %}">Back</a>
+            <a style="width: 140px" role="button" class="btn btn-secondary" href="{% url 'game_show' game.id %}">Back</a>
           </td>
           <td align="center">
-            <button type="submit" style="width: 120px" class="btn btn-secondary">Save</button>
+            <button type="submit" style="width: 140px" class="btn btn-secondary">Save</button>
           </td>
         </tr>
       </table>

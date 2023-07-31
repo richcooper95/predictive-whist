@@ -220,6 +220,42 @@ class GameShowView(LoginRequiredMixin, TemplateView):
         latest_game_round = (
             GameRound.objects.filter(game=game).order_by("round_number").last()
         )
+        round_players = (
+            GameRoundGamePlayer.objects.select_related("game_round", "game_player")
+            .filter(game_round__game=game)
+            .all()
+        )
+
+        last_round_to_show = latest_game_round.round_number if latest_game_round.total_tricks_predicted is not None else latest_game_round.round_number - 1
+        game_rounds = [
+            (
+                str(round_number),
+                [
+                    {
+                        "tricks_won": round_player.tricks_won
+                        if round_player.tricks_won is not None
+                        else "-",
+                        "tricks_predicted": round_player.tricks_predicted
+                        if round_player.tricks_predicted is not None
+                        else "-",
+                        "score": (
+                            (round_player.tricks_won or 0)
+                            + (
+                                game.correct_prediction_points
+                                if round_player.tricks_predicted
+                                == round_player.tricks_won
+                                else 0
+                            )
+                        )
+                        if round_player.tricks_won is not None
+                        else "-",
+                    }
+                    for round_player in round_players
+                    if round_player.game_round.round_number == round_number
+                ],
+            )
+            for round_number in range(last_round_to_show, 0, -1)
+        ]
 
         dealer_player_number = latest_game_round.round_number % len(game_players) + 1
 
@@ -238,6 +274,7 @@ class GameShowView(LoginRequiredMixin, TemplateView):
                 "dealer_name": game_players.get(
                     player_number=dealer_player_number
                 ).player.name,
+                "game_rounds": game_rounds,
             },
         )
 
@@ -247,7 +284,8 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
     form_class = GameRoundPredictionForm
 
     def get(self, request, *args, **kwargs):
-        game_round = get_object_or_404(GameRound, pk=self.kwargs["round_id"])
+        game = get_object_or_404(Game, pk=self.kwargs["game_id"])
+        game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
 
         if not game_round.visible_to(self.request.user):
             return HttpResponseForbidden()
@@ -259,7 +297,8 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        game_round = get_object_or_404(GameRound, pk=self.kwargs["round_id"])
+        game = get_object_or_404(Game, pk=self.kwargs["game_id"])
+        game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
 
         round_players = list(
             GameRoundGamePlayer.objects.select_related("game_round", "game_player")
@@ -324,7 +363,8 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         with transaction.atomic():
-            game_round = get_object_or_404(GameRound, pk=self.kwargs["round_id"])
+            game = get_object_or_404(Game, pk=self.kwargs["game_id"])
+            game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
 
             for round_player in form.cleaned_data:
                 player_number = round_player.split("_")[-1]
@@ -348,21 +388,29 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
             game_round.total_tricks_predicted = total_tricks_predicted
             game_round.save()
 
-        return HttpResponseRedirect(
-            f"/games/{game_round.game.id}/round/{game_round.id}/scores/"
-        )
+        return HttpResponseRedirect(f"/games/{game_round.game.id}")
 
 
 class GameRoundScoreView(LoginRequiredMixin, FormView):
     template_name = "game_round_scores.html"
     form_class = GameRoundScoreForm
 
+    def get(self, request, *args, **kwargs):
+        game = get_object_or_404(Game, pk=self.kwargs["game_id"])
+        game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
+
+        if not game_round.visible_to(self.request.user):
+            return HttpResponseForbidden()
+
+        return super().get(request, *args, **kwargs)
+
     def get_success_url(self):
         return self.request.path
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        game_round = get_object_or_404(GameRound, pk=self.kwargs["round_id"])
+        game = get_object_or_404(Game, pk=self.kwargs["game_id"])
+        game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
 
         round_players = list(
             GameRoundGamePlayer.objects.select_related("game_round", "game_player")
@@ -427,7 +475,8 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         with transaction.atomic():
-            game_round = get_object_or_404(GameRound, pk=self.kwargs["round_id"])
+            game = get_object_or_404(Game, pk=self.kwargs["game_id"])
+            game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
 
             for round_player in form.cleaned_data:
                 player_number = round_player.split("_")[-1]

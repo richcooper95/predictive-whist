@@ -1,22 +1,6 @@
 {% extends "game_base.html" %}
 
 {% block game_round_content %}
-  <table class="table">
-    <tr class="table-secondary">
-      <th></th>
-      {% for game_player in game_players %}
-        <th>{{game_player.player.name}}</th>
-      {% endfor %}
-    </tr>
-    <tr>
-      <th>Score</th>
-      {% for game_player in game_players %}
-        <td>
-          {{game_player.score}}
-        </td>
-      {% endfor %}
-  </table>
-
   {% if not game.is_ongoing %}
     <br>
     <h3 align="center">Congratulations, {{ winning_players }}! 🥳</h3>
@@ -26,10 +10,24 @@
     <table align="center" style="width: 25%" class="table table-borderless">
       <tr>
         <td align="center">
-          <a role="button" style="width: 120px" class="btn btn-secondary" href="{% url 'game_create' %}">Play again</a>
+          <a role="button" style="width: 140px" class="btn btn-secondary" href="{% url 'game_create' %}">Play again</a>
         </td>
         <td align="center">
-          <a role="button" style="width: 120px" class="btn btn-danger" href="{% url 'game_delete' game.id %}">Delete game</a>
+          <a role="button" style="width: 140px" class="btn btn-danger" href="{% url 'game_delete' game.id %}">Delete game</a>
+        </td>
+      </tr>
+    </table>
+  {% elif latest_game_round.total_tricks_predicted %}
+    <table align="center" style="width: 25%" class="table table-borderless">
+      <tr>
+        <td align="center">
+          <a style="width: 140px" role="button" class="btn btn-secondary" href="{% url 'game_round_scores' game.id latest_game_round.round_number %}">Score  Round {{latest_game_round.round_number}}</a>
+        </td>
+        <td align="center">
+          <a style="width: 140px" role="button" class="btn btn-secondary" href="{% url 'game_round_bids' game.id latest_game_round.round_number %}">Edit bids</a>
+        </td>
+        <td align="center">
+          <a style="width: 140px" role="button" class="btn btn-danger" href="{% url 'game_delete' game.id %}">Delete game</a>
         </td>
       </tr>
     </table>
@@ -37,13 +35,42 @@
     <table align="center" style="width: 25%" class="table table-borderless">
       <tr>
         <td align="center">
-          <a style="width: 120px" role="button" class="btn btn-secondary" href="{% url 'game_round_bids' game.id latest_game_round.id %}">Next round</a>
+          <a style="width: 140px" role="button" class="btn btn-secondary" href="{% url 'game_round_bids' game.id latest_game_round.round_number %}">Start Round {{latest_game_round.round_number}}</a>
         </td>
         <td align="center">
-          <a style="width: 120px" role="button" class="btn btn-danger" href="{% url 'game_delete' game.id %}">Delete game</a>
+          <a style="width: 140px" role="button" class="btn btn-danger" href="{% url 'game_delete' game.id %}">Delete game</a>
         </td>
       </tr>
     </table>
   {% endif %}
+
+  <table class="table table-hover" style="text-align: center">
+    <tr>
+      <th>Round</th>
+      {% for game_player in game_players %}
+        <th>{{game_player.player.name}}</th>
+      {% endfor %}
+    </tr>
+
+    {% for round_number, round_players in game_rounds %}
+      <tr>
+        <td style="width: 90px"><strong>{{round_number}}</strong></td>
+        {% for round_player in round_players %}
+          <td>
+            {% if round_player.tricks_predicted == round_player.tricks_won %}
+              <tt><strong>{{round_player.tricks_predicted}} | {{round_player.tricks_won}} ({{round_player.score}})</strong></tt>
+            {% else %}
+              <tt>{{round_player.tricks_predicted}} | {{round_player.tricks_won}} ({{round_player.score}})</tt>
+            {% endif %}
+          </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </table>
+  <ul style="list-style: none">
+    <li><small><tt>A | B (C)</tt> means the player had <tt>A</tt> tricks predicted, won <tt>B</tt> tricks, and scored <tt>C</tt> points.</small></li>
+    <li><small><strong><tt>bold</tt></strong> means the prediction was correct.</small></small></li>
+  </ul>
+  <br>
 
 {% endblock %}
