@@ -56,12 +56,12 @@
             <td><strong>{{round_number}}</strong></td>
             {% for round_player in round_players %}
               <td style="padding-right: 0px; text-align: right; border-left: 0.5pt solid grey">
-                <a href="{% url 'game_round_bids' game.id round_number round_player.player_number %}" title="Click to edit predictions" style="text-decoration: none; width: 100%; color: black">
+                <a href="{% url 'game_round_bids' game.id round_number round_player.player_number %}" title="Click to edit bid" style="text-decoration: none; width: 100%; color: black">
                   <tt>{{round_player.tricks_predicted}}</tt>
                 </a>
               </td>
               <td style="padding-left: 0px; padding-right: 0px; width: 40px">
-                <a href="{% url 'game_round_scores' game.id round_number round_player.player_number %}" title="Click to edit scores" style="text-decoration: none; width: 100%; color: black">
+                <a href="{% url 'game_round_scores' game.id round_number round_player.player_number %}" title="Click to edit score" style="text-decoration: none; width: 100%; color: black">
                   <tt>{{round_player.tricks_won}}</tt>
                 </a>
               </td>
