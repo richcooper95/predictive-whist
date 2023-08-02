@@ -24,9 +24,6 @@
           <a style="width: 140px" role="button" class="btn btn-secondary" href="{% url 'game_round_scores' game.id latest_game_round.round_number %}">Score Round {{latest_game_round.round_number}}</a>
         </td>
         <td align="center">
-          <a style="width: 140px" role="button" class="btn btn-secondary" href="{% url 'game_round_bids' game.id latest_game_round.round_number %}">Edit bids</a>
-        </td>
-        <td align="center">
           <a style="width: 140px" role="button" class="btn btn-danger" href="{% url 'game_delete' game.id %}">Delete game</a>
         </td>
       </tr>
