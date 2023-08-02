@@ -211,7 +211,10 @@ class GameShowView(LoginRequiredMixin, TemplateView):
             return HttpResponseForbidden()
 
         game_players = (
-            GamePlayer.objects.select_related("game", "player").filter(game=game).order_by("player_number").all()
+            GamePlayer.objects.select_related("game", "player")
+            .filter(game=game)
+            .order_by("player_number")
+            .all()
         )
         max_score = game_players.aggregate(Max("score"))["score__max"]
         winning_players = ", ".join(
@@ -227,7 +230,11 @@ class GameShowView(LoginRequiredMixin, TemplateView):
             .all()
         )
 
-        last_round_to_show = latest_game_round.round_number if latest_game_round.total_tricks_predicted is not None else latest_game_round.round_number - 1
+        last_round_to_show = (
+            latest_game_round.round_number
+            if latest_game_round.total_tricks_predicted is not None
+            else latest_game_round.round_number - 1
+        )
         game_rounds = [
             (
                 str(round_number),
@@ -287,7 +294,9 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
 
     def get(self, request, *args, **kwargs):
         game = get_object_or_404(Game, pk=self.kwargs["game_id"])
-        game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
+        game_round = get_object_or_404(
+            GameRound, round_number=self.kwargs["round_number"], game=game
+        )
 
         if not game_round.visible_to(self.request.user):
             return HttpResponseForbidden()
@@ -300,7 +309,9 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         game = get_object_or_404(Game, pk=self.kwargs["game_id"])
-        game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
+        game_round = get_object_or_404(
+            GameRound, round_number=self.kwargs["round_number"], game=game
+        )
 
         round_players = list(
             GameRoundGamePlayer.objects.select_related("game_round", "game_player")
@@ -324,7 +335,9 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         context = super(GameRoundPredictionView, self).get_context_data(**kwargs)
 
         game = get_object_or_404(Game, id=self.kwargs["game_id"])
-        game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
+        game_round = get_object_or_404(
+            GameRound, round_number=self.kwargs["round_number"], game=game
+        )
         game_players = (
             GamePlayer.objects.select_related("game", "player").filter(game=game).all()
         )
@@ -362,14 +375,19 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
             player_number=dealer_player_number
         ).player.name
         context["round_players"] = round_players
-        context["player_number"] = self.kwargs.get("player_number") or round_players[0].game_player.player_number
+        context["player_number"] = (
+            self.kwargs.get("player_number")
+            or round_players[0].game_player.player_number
+        )
 
         return context
 
     def form_valid(self, form):
         with transaction.atomic():
             game = get_object_or_404(Game, pk=self.kwargs["game_id"])
-            game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
+            game_round = get_object_or_404(
+                GameRound, round_number=self.kwargs["round_number"], game=game
+            )
 
             for round_player in form.cleaned_data:
                 player_number = round_player.split("_")[-1]
@@ -380,7 +398,10 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
 
                 if game_round_game_player.tricks_won is not None:
                     # We're editing a round which has already completed.
-                    if game_round_game_player.tricks_predicted == game_round_game_player.tricks_won:
+                    if (
+                        game_round_game_player.tricks_predicted
+                        == game_round_game_player.tricks_won
+                    ):
                         game_round_game_player.game_player.score -= (
                             game_round.game.correct_prediction_points
                         )
@@ -410,7 +431,9 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
 
     def get(self, request, *args, **kwargs):
         game = get_object_or_404(Game, pk=self.kwargs["game_id"])
-        game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
+        game_round = get_object_or_404(
+            GameRound, round_number=self.kwargs["round_number"], game=game
+        )
 
         if not game_round.visible_to(self.request.user):
             return HttpResponseForbidden()
@@ -423,7 +446,9 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         game = get_object_or_404(Game, pk=self.kwargs["game_id"])
-        game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
+        game_round = get_object_or_404(
+            GameRound, round_number=self.kwargs["round_number"], game=game
+        )
 
         round_players = list(
             GameRoundGamePlayer.objects.select_related("game_round", "game_player")
@@ -447,7 +472,9 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
         context = super(GameRoundScoreView, self).get_context_data(**kwargs)
 
         game = get_object_or_404(Game, id=self.kwargs["game_id"])
-        game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
+        game_round = get_object_or_404(
+            GameRound, round_number=self.kwargs["round_number"], game=game
+        )
 
         game_players = (
             GamePlayer.objects.select_related("game", "player").filter(game=game).all()
@@ -486,14 +513,19 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
             player_number=dealer_player_number
         ).player.name
         context["round_players"] = round_players
-        context["player_number"] = self.kwargs.get("player_number") or round_players[0].game_player.player_number
+        context["player_number"] = (
+            self.kwargs.get("player_number")
+            or round_players[0].game_player.player_number
+        )
 
         return context
 
     def form_valid(self, form):
         with transaction.atomic():
             game = get_object_or_404(Game, pk=self.kwargs["game_id"])
-            game_round = get_object_or_404(GameRound, round_number=self.kwargs["round_number"], game=game)
+            game_round = get_object_or_404(
+                GameRound, round_number=self.kwargs["round_number"], game=game
+            )
 
             editing_existing_round = False
 
