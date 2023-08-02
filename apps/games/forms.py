@@ -72,13 +72,10 @@ class GameModelForm(forms.ModelForm):
         ):
             max_starting_round_card_number = (number_of_decks * 52) // len(players)
 
-            if starting_round_card_number < 1 or starting_round_card_number > 13:
+            if starting_round_card_number < 1 or starting_round_card_number > max_starting_round_card_number:
                 raise forms.ValidationError(
-                    "The starting round card number must be between 1 and %(max_starting_round_card_number)s with %(player_count)s players.",
-                    params={
-                        "player_count": len(players),
-                        "max_starting_round_card_number": max_starting_round_card_number,
-                    },
+                    "The starting round card number must be between 1 and "
+                    f"{max_starting_round_card_number} with {len(players)} players.",
                 )
 
             return cleaned_data
