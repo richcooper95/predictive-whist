@@ -21,7 +21,7 @@
     <table align="center" style="width: 25%" class="table table-borderless">
       <tr>
         <td align="center">
-          <a style="width: 140px" role="button" class="btn btn-secondary" href="{% url 'game_round_scores' game.id latest_game_round.round_number %}">Score  Round {{latest_game_round.round_number}}</a>
+          <a style="width: 140px" role="button" class="btn btn-secondary" href="{% url 'game_round_scores' game.id latest_game_round.round_number %}">Score Round {{latest_game_round.round_number}}</a>
         </td>
         <td align="center">
           <a style="width: 140px" role="button" class="btn btn-secondary" href="{% url 'game_round_bids' game.id latest_game_round.round_number %}">Edit bids</a>
@@ -44,33 +44,41 @@
     </table>
   {% endif %}
 
-  <table class="table table-hover" style="text-align: center">
-    <tr>
-      <th>Round</th>
-      {% for game_player in game_players %}
-        <th>{{game_player.player.name}}</th>
-      {% endfor %}
-    </tr>
+  {% if game_rounds %}
+    <div class="table-responsive">
+      <table class="table table-hover" style="text-align: center; white-space: nowrap">
+        <tr class="table-secondary">
+          <th style="width: 70px">Round</th>
+          {% for game_player in game_players %}
+            <th colspan="3">{{game_player.player.name}}</th>
+          {% endfor %}
+        </tr>
 
-    {% for round_number, round_players in game_rounds %}
-      <tr>
-        <td style="width: 90px"><strong>{{round_number}}</strong></td>
-        {% for round_player in round_players %}
-          <td>
-            {% if round_player.tricks_predicted == round_player.tricks_won %}
-              <tt><strong>{{round_player.tricks_predicted}} | {{round_player.tricks_won}} ({{round_player.score}})</strong></tt>
-            {% else %}
-              <tt>{{round_player.tricks_predicted}} | {{round_player.tricks_won}} ({{round_player.score}})</tt>
-            {% endif %}
-          </td>
+        {% for round_number, round_players in game_rounds %}
+          <tr>
+            <td><strong>{{round_number}}</strong></td>
+            {% for round_player in round_players %}
+              <td style="padding-right: 0px; text-align: right; border-left: 0.5pt solid grey">
+                <a href="{% url 'game_round_bids' game.id round_number round_player.player_number %}" title="Click to edit predictions" style="text-decoration: none; width: 100%; color: black">
+                  <tt>{{round_player.tricks_predicted}}</tt>
+                </a>
+              </td>
+              <td style="padding-left: 0px; padding-right: 0px; width: 40px">
+                <a href="{% url 'game_round_scores' game.id round_number round_player.player_number %}" title="Click to edit scores" style="text-decoration: none; width: 100%; color: black">
+                  <tt>{{round_player.tricks_won}}</tt>
+                </a>
+              </td>
+              <td style="padding-left: 0px; text-align: left">
+                <tt><strong>{{round_player.score}}</strong></tt>
+              </td>
+            {% endfor %}
+          </tr>
         {% endfor %}
-      </tr>
-    {% endfor %}
-  </table>
-  <ul style="list-style: none">
-    <li><small><tt>A | B (C)</tt> means the player had <tt>A</tt> tricks predicted, won <tt>B</tt> tricks, and scored <tt>C</tt> points.</small></li>
-    <li><small><strong><tt>bold</tt></strong> means the prediction was correct.</small></small></li>
-  </ul>
-  <br>
+      </table>
+    </div>
+    <ul style="list-style: none">
+      <li><small><tt>A B <strong>C</strong></tt> means the player predicted <tt>A</tt> tricks, won <tt>B</tt>, and scored <tt>C</tt> points.</small></small></li>
+    </ul>
+  {% endif %}
 
 {% endblock %}

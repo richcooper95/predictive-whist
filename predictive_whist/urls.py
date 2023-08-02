@@ -42,9 +42,19 @@ urlpatterns = [
     path("games/new/<", GameCreateView.as_view(), name="game_create"),
     path("games/delete/<int:pk>/", GameDeleteView.as_view(), name="game_delete"),
     path(
+        "games/<int:game_id>/round/<int:round_number>/bids/<int:player_number>/",
+        GameRoundPredictionView.as_view(),
+        name="game_round_bids",
+    ),
+    path(
         "games/<int:game_id>/round/<int:round_number>/bids/",
         GameRoundPredictionView.as_view(),
         name="game_round_bids",
+    ),
+    path(
+        "games/<int:game_id>/round/<int:round_number>/scores/<int:player_number>/",
+        GameRoundScoreView.as_view(),
+        name="game_round_scores",
     ),
     path(
         "games/<int:game_id>/round/<int:round_number>/scores/",

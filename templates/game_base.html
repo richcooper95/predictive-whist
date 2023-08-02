@@ -22,22 +22,24 @@
       </tr>
     </table>
 
-    <table class="table" style="text-align: center">
-      <tr class="table-secondary">
-        <th></th>
-        {% for game_player in game_players %}
-          <th>{{game_player.player.name}}</th>
-        {% endfor %}
-      </tr>
-      <tr>
-        <th style="width: 90px">Score</th>
-        {% for game_player in game_players %}
-          <td>
-            <tt>{{game_player.score}}</tt>
-          </td>
-        {% endfor %}
-      </tr>
-    </table>
+    <div class="table-responsive">
+      <table class="table table-fixed" style="text-align: center; white-space: nowrap">
+        <tr class="table-secondary">
+          <th style="width: 70px"></th>
+          {% for game_player in game_players %}
+            <th>{{game_player.player.name}}</th>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td style="width: 70px"><strong>Score</strong></td>
+          {% for game_player in game_players %}
+            <td>
+              <tt>{{game_player.score}}</tt>
+            </td>
+          {% endfor %}
+        </tr>
+      </table>
+    </div>
 
     {% block game_round_content %}{% endblock %}
 

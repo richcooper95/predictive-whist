@@ -6,6 +6,7 @@
       {% load bootstrap5 %}
       {% bootstrap_css %}
       {% bootstrap_javascript %}
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
       <link href="{% static 'fontawesomefree/css/fontawesome.css' %}" rel="stylesheet" type="text/css">
       <link href="{% static 'fontawesomefree/css/brands.css' %}" rel="stylesheet" type="text/css">
       <link href="{% static 'fontawesomefree/css/solid.css' %}" rel="stylesheet" type="text/css">
@@ -63,7 +64,7 @@
             </ul>
             {% if user.is_authenticated %}
               <span class="navbar-text">
-                Hello, {{ user.username }}.
+                Hello, {{ user.username }}! 👋
               </span>
             {% endif %}
           </div>
@@ -77,17 +78,11 @@
       </div>
       <br>
 
-      <!-- Footer -->
       <footer class="text-center text-lg-start bg-light text-muted fixed-bottom">
-        <!-- Section: Social media -->
         <section class="d-flex justify-content-center justify-content-lg-between p-4 border-bottom">
-          <!-- Left -->
           <div class="me-5 d-none d-lg-block">
             <span>© 2023 by Rich Barton-Cooper</span>
           </div>
-          <!-- Left -->
-
-          <!-- Right -->
           <div>
             <a href="https://www.linkedin.com/in/rich-cooper/" class="me-4 text-reset" target="_blank">
               <i class="fab fa-linkedin"></i>
@@ -96,10 +91,28 @@
               <i class="fab fa-github"></i>
             </a>
           </div>
-          <!-- Right -->
         </section>
-        <!-- Section: Social media -->
       </footer>
-      <!-- Footer -->
     </body>
+
+    {% block extrascripts %}{% endblock %}
+
+    <script>
+      function setColumnWidths(table) {
+        const headers = table.querySelectorAll("th");
+        const numColumns = headers.length;
+        const width = 100 / numColumns + "%";
+        headers.forEach(header => {
+          header.style.width = width;
+        });
+      }
+
+      const tables = document.querySelectorAll("div > table");
+
+      tables.forEach(table => {
+        setColumnWidths(table);
+      });
+
+      console.log("Tables resized");
+    </script>
   </html>

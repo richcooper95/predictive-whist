@@ -1,4 +1,4 @@
-{% extends "game_show.html" %}
+{% extends "game_base.html" %}
 
 {% load crispy_forms_tags %}
 {% load widget_tweaks %}
@@ -6,44 +6,46 @@
 {% block title %}Games{% endblock %}
 
 {% block game_round_content %}
-  <div class="container-fluid">
-    <h5 align="center">Round {{latest_game_round.round_number}}: Scores</h5>
+  <div class="container-fluid" style="padding: 0px">
+    <h5 align="center">Round {{game_round.round_number}}: Scores</h5>
     <small><i>Players are shown in the order they played this round.</i></small>
     <form method="post" align="center">
       {% csrf_token %}
-      <table class="table">
-        <thead>
-          <tr class="table-secondary">
-            <th style="width: 140px"></th>
-            {% for round_player in round_players %}
-              <th>{{round_player.game_player.player.name}}</th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="align-middle"><strong>Tricks</strong></td>
-            {% for field in form.visible_fields %}
-              <td>
-                {% if form.is_bound %}
-                  {% if field.errors %}
-                    {% render_field field class="form-control is-invalid" %}
-                    {% for error in field.errors %}
-                      <div class="invalid-feedback">
-                        {{ error }}
-                      </div>
-                    {% endfor %}
+      <div class="table-responsive">
+        <table class="table" style="white-space: nowrap">
+          <thead>
+            <tr class="table-secondary">
+              <th style="width: 140px"></th>
+              {% for round_player in round_players %}
+                <th>{{round_player.game_player.player.name}}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="align-middle"><strong>Tricks</strong></td>
+              {% for field in form.visible_fields %}
+                <td>
+                  {% if form.is_bound %}
+                    {% if field.errors %}
+                      {% render_field field class="form-control is-invalid" %}
+                      {% for error in field.errors %}
+                        <div class="invalid-feedback">
+                          {{ error }}
+                        </div>
+                      {% endfor %}
+                    {% else %}
+                      {% render_field field class="form-control is-valid" %}
+                    {% endif %}
                   {% else %}
-                    {% render_field field class="form-control is-valid" %}
+                    {% render_field field class="form-control" %}
                   {% endif %}
-                {% else %}
-                  {% render_field field class="form-control" %}
-                {% endif %}
-              </td>
-            {% endfor %}
-          </tr>
-        </tbody>
-      </table>
+                </td>
+              {% endfor %}
+            </tr>
+          </tbody>
+        </table>
+      </div>
       {% if form.non_field_errors %}
         {% for error in form.non_field_errors %}
           <div class="alert alert-danger" role="alert">
@@ -63,4 +65,16 @@
       </table>
     </form>
   </div>
+{% endblock %}
+
+{% block extrascripts %}
+    <script type="text/javascript">
+      // When the page has finished loading, autofocus on the input field for
+      // the given player number.
+      $(document).ready(function() {
+        window.onload = function() {
+          $("input#id_tricks_won_{{player_number}}").focus();
+        };
+      });
+    </script>
 {% endblock %}
