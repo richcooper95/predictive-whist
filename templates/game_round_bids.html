@@ -68,13 +68,13 @@
 {% endblock %}
 
 {% block extrascripts %}
-    <script type="text/javascript">
-      // When the page has finished loading, autofocus on the input field for
-      // the given player number.
-      $(document).ready(function() {
-        window.onload = function() {
-          $("input#id_tricks_predicted_{{player_number}}").focus();
-        };
-      });
-    </script>
+  <script type="text/javascript">
+    // When the page has finished loading, autofocus on the input field for
+    // the given player number.
+    $(document).ready(function() {
+      window.onload = function() {
+        $("input#id_tricks_predicted_{{player_number}}").focus();
+      };
+    });
+  </script>
 {% endblock %}
