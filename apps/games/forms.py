@@ -115,14 +115,6 @@ class GameRoundPredictionForm(forms.Form):
                 f"{self.card_number}. The dealer must choose a different bid."
             )
 
-        if any(x > self.card_number for x in cleaned_data.values()):
-            raise forms.ValidationError(
-                f"No individual bid can be greater than {self.card_number}."
-            )
-
-        if any(x < 0 for x in cleaned_data.values()):
-            raise forms.ValidationError(f"No bid can be less than 0.")
-
         return cleaned_data
 
 
@@ -149,13 +141,5 @@ class GameRoundScoreForm(forms.Form):
             raise forms.ValidationError(
                 f"The total number of tricks scored must be equal to {self.card_number}."
             )
-
-        if any(x > self.card_number for x in cleaned_data.values()):
-            raise forms.ValidationError(
-                f"No individual score can be greater than {self.card_number}."
-            )
-
-        if any(x < 0 for x in cleaned_data.values()):
-            raise forms.ValidationError(f"No score can be less than 0.")
 
         return cleaned_data
