@@ -1,8 +1,14 @@
+from typing import Dict
 from django.db import transaction
 from django.db.models import Max
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseRedirect,
+)
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, DeleteView, FormView
@@ -16,43 +22,30 @@ from .forms import (
 from .models import GameRound, GameRoundGamePlayer, Player, Game, GamePlayer
 
 
-# Create your views here.
-def trump_suit_to_emoji(trump_suit):
-    if trump_suit == "H":
-        return '<span style="color: red">♥️</span>'
+TRUMP_SUIT_TO_EMOJI = {
+    "H": '<span style="color: red">♥️</span>',
+    "D": '<span style="color: red">♦️</span>',
+    "S": "♠️",
+    "C": "♣️",
+    "N": "🃏",
+}
 
-    if trump_suit == "D":
-        return '<span style="color: red">♦️</span>'
-
-    if trump_suit == "S":
-        return "♠️"
-
-    if trump_suit == "C":
-        return "♣️"
-
-    return "🃏"
-
-
-def get_next_trump_suit(trump_suit):
-    if trump_suit == "H":
-        return "C"
-
-    if trump_suit == "C":
-        return "D"
-
-    if trump_suit == "D":
-        return "S"
-
-    if trump_suit == "S":
-        return "N"
-
-    return "H"
+NEXT_TRUMP_SUIT = {
+    "H": "C",
+    "C": "D",
+    "D": "S",
+    "S": "N",
+    "N": "H",
+}
 
 
 class PlayerListView(LoginRequiredMixin, TemplateView):
+    """This view lists all players created by the current user."""
+
     template_name = "player_list.html"
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """Get all players created by the current user."""
         players = Player.objects.filter(created_by_user=self.request.user).all()
 
         game_players = (
@@ -74,10 +67,12 @@ class PlayerListView(LoginRequiredMixin, TemplateView):
 
 
 class PlayerCreateView(LoginRequiredMixin, CreateView):
+    """This view allows the user to create a new player."""
+
     template_name = "player_create.html"
     form_class = PlayerModelForm
 
-    def form_valid(self, form):
+    def form_valid(self, form: PlayerModelForm) -> HttpResponseRedirect:
         form.instance.created_by_user = self.request.user
         form.save()
 
@@ -85,6 +80,8 @@ class PlayerCreateView(LoginRequiredMixin, CreateView):
 
 
 class PlayerDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
+    """This view allows the user to delete a player."""
+
     model = Player
     success_url = "/players"
     # TODO: This doesn't work. Why?
@@ -93,9 +90,11 @@ class PlayerDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
 
 
 class GameListView(LoginRequiredMixin, TemplateView):
+    """This view lists all games created by the current user."""
+
     template_name = "game_list.html"
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         games = Game.objects.filter(created_by_user=self.request.user).all()
         game_players = GamePlayer.objects.select_related("game", "player").all()
 
@@ -132,16 +131,18 @@ class GameListView(LoginRequiredMixin, TemplateView):
 
 
 class GameCreateView(LoginRequiredMixin, CreateView):
+    """This view allows the user to create a new game."""
+
     template_name = "game_create.html"
     form_class = GameModelForm
 
-    def get_form_kwargs(self):
+    def get_form_kwargs(self) -> Dict:
         kwargs = super(GameCreateView, self).get_form_kwargs()
         kwargs["user"] = self.request.user
 
         return kwargs
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> Dict:
         context = super().get_context_data(**kwargs)
 
         context["user_player_count"] = Player.objects.filter(
@@ -150,7 +151,18 @@ class GameCreateView(LoginRequiredMixin, CreateView):
 
         return context
 
-    def form_valid(self, form):
+    def form_valid(self, form: GameModelForm) -> HttpResponseRedirect:
+        """Save the game and redirect to the game page.
+
+        Creates the game, the game players, the first round. Adds the game players to the
+        first round, creating a GameRoundGamePlayer object for each.
+
+        Args:
+            form (GameModelForm): The form containing the game data.
+
+        Returns:
+            HttpResponseRedirect: Redirects to the page for the newly created game.
+        """
         with transaction.atomic():
             # First, save the game so we can get an ID.
             game = Game.objects.create(
@@ -168,6 +180,7 @@ class GameCreateView(LoginRequiredMixin, CreateView):
 
             # Then, save the players by creating a GamePlayer object for each, making sure we
             # set the player_number correctly.
+            # TODO: Enable users to choose the player order in the form.
             game_players = [
                 GamePlayer.objects.create(
                     game=game,
@@ -194,6 +207,8 @@ class GameCreateView(LoginRequiredMixin, CreateView):
 
 
 class GameDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
+    """This view allows the user to delete a game."""
+
     model = Game
     success_url = "/games"
     # TODO: This doesn't work. Why?
@@ -202,9 +217,11 @@ class GameDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
 
 
 class GameShowView(LoginRequiredMixin, TemplateView):
+    """This view shows the details of a game and enables gameplay."""
+
     template_name = "game_show.html"
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         game = get_object_or_404(Game, id=self.kwargs["pk"])
 
         if not game.visible_to(self.request.user):
@@ -229,12 +246,13 @@ class GameShowView(LoginRequiredMixin, TemplateView):
             .order_by("game_round__round_number", "game_player__player_number")
             .all()
         )
-
         last_round_to_show = (
             latest_game_round.round_number
             if latest_game_round.total_tricks_predicted is not None
             else latest_game_round.round_number - 1
         )
+
+        # TODO: Neaten this up, it's a bit of a mess.
         game_rounds = [
             (
                 str(round_number),
@@ -279,7 +297,7 @@ class GameShowView(LoginRequiredMixin, TemplateView):
                 ),
                 "winning_players": winning_players,
                 "latest_game_round": latest_game_round,
-                "trump_suit": trump_suit_to_emoji(latest_game_round.trump_suit),
+                "trump_suit": TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit],
                 "dealer_name": game_players.get(
                     player_number=dealer_player_number
                 ).player.name,
@@ -289,10 +307,12 @@ class GameShowView(LoginRequiredMixin, TemplateView):
 
 
 class GameRoundPredictionView(LoginRequiredMixin, FormView):
+    """This view allows the user to enter the predictions for a game round."""
+
     template_name = "game_round_bids.html"
     form_class = GameRoundPredictionForm
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         game = get_object_or_404(Game, pk=self.kwargs["game_id"])
         game_round = get_object_or_404(
             GameRound, round_number=self.kwargs["round_number"], game=game
@@ -303,16 +323,17 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
 
         return super().get(request, *args, **kwargs)
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         return self.request.path
 
-    def get_form_kwargs(self):
+    def get_form_kwargs(self) -> Dict:
         kwargs = super().get_form_kwargs()
         game = get_object_or_404(Game, pk=self.kwargs["game_id"])
         game_round = get_object_or_404(
             GameRound, round_number=self.kwargs["round_number"], game=game
         )
 
+        # We want to display the players in the order they should bid.
         round_players = list(
             GameRoundGamePlayer.objects.select_related("game_round", "game_player")
             .filter(game_round=game_round)
@@ -320,6 +341,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
             .all()
         )
 
+        # TODO: This is duplicating logic from determining the dealer.
         starting_player_idx = game_round.round_number % len(round_players) + 1
 
         round_players = (
@@ -331,7 +353,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
 
         return kwargs
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> Dict:
         context = super(GameRoundPredictionView, self).get_context_data(**kwargs)
 
         game = get_object_or_404(Game, id=self.kwargs["game_id"])
@@ -370,7 +392,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         )
         context["latest_game_round"] = latest_game_round
         context["game_round"] = game_round
-        context["trump_suit"] = trump_suit_to_emoji(latest_game_round.trump_suit)
+        context["trump_suit"] = TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit]
         context["dealer_name"] = game_players.get(
             player_number=dealer_player_number
         ).player.name
@@ -382,7 +404,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
 
         return context
 
-    def form_valid(self, form):
+    def form_valid(self, form: GameRoundPredictionForm) -> HttpResponse:
         with transaction.atomic():
             game = get_object_or_404(Game, pk=self.kwargs["game_id"])
             game_round = get_object_or_404(
@@ -397,7 +419,9 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
                 )
 
                 if game_round_game_player.tricks_won is not None:
-                    # We're editing a round which has already completed.
+                    # We're editing a round which has already completed, so we need to
+                    # make sure we don't double-count the score from when this round was
+                    # originally played.
                     if (
                         game_round_game_player.tricks_predicted
                         == game_round_game_player.tricks_won
@@ -426,10 +450,12 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
 
 
 class GameRoundScoreView(LoginRequiredMixin, FormView):
+    """This view allows the user to enter the scores for a game round."""
+
     template_name = "game_round_scores.html"
     form_class = GameRoundScoreForm
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         game = get_object_or_404(Game, pk=self.kwargs["game_id"])
         game_round = get_object_or_404(
             GameRound, round_number=self.kwargs["round_number"], game=game
@@ -440,10 +466,10 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
 
         return super().get(request, *args, **kwargs)
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         return self.request.path
 
-    def get_form_kwargs(self):
+    def get_form_kwargs(self) -> Dict:
         kwargs = super().get_form_kwargs()
         game = get_object_or_404(Game, pk=self.kwargs["game_id"])
         game_round = get_object_or_404(
@@ -468,7 +494,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
 
         return kwargs
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> Dict:
         context = super(GameRoundScoreView, self).get_context_data(**kwargs)
 
         game = get_object_or_404(Game, id=self.kwargs["game_id"])
@@ -508,7 +534,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
         )
         context["latest_game_round"] = latest_game_round
         context["game_round"] = game_round
-        context["trump_suit"] = trump_suit_to_emoji(latest_game_round.trump_suit)
+        context["trump_suit"] = TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit]
         context["dealer_name"] = game_players.get(
             player_number=dealer_player_number
         ).player.name
@@ -520,13 +546,14 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
 
         return context
 
-    def form_valid(self, form):
+    def form_valid(self, form: GameRoundScoreForm) -> HttpResponse:
         with transaction.atomic():
             game = get_object_or_404(Game, pk=self.kwargs["game_id"])
             game_round = get_object_or_404(
                 GameRound, round_number=self.kwargs["round_number"], game=game
             )
 
+            # TODO: Neaten this up.
             editing_existing_round = False
 
             for round_player in form.cleaned_data:
@@ -546,7 +573,6 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
 
                 if editing_existing_round:
                     old_tricks_won = game_round_game_player.tricks_won
-                    old_score = game_round_game_player.game_player.score
 
                     game_round_game_player.game_player.score -= old_tricks_won
 
@@ -596,7 +622,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
                 next_round = GameRound.objects.create(
                     game=game_round.game,
                     round_number=game_round.round_number + 1,
-                    trump_suit=get_next_trump_suit(game_round.trump_suit),
+                    trump_suit=NEXT_TRUMP_SUIT[game_round.trump_suit],
                     card_number=next_round_card_number,
                 )
 

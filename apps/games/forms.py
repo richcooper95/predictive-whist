@@ -1,5 +1,6 @@
 import datetime
 import random
+from typing import Dict, List
 from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
 
@@ -7,13 +8,19 @@ from apps.games.models import Game, Player
 
 
 class GameModelForm(forms.ModelForm):
+    """Form for creating a new game.
+
+    This form is used in the GameCreateView.
+    """
+
+    # TODO: Enable users to choose the player order in the form.
     players = forms.ModelMultipleChoiceField(
         queryset=None,
         widget=forms.CheckboxSelectMultiple,
         required=True,
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self.user = kwargs.pop("user", None)
         initial = kwargs.pop("initial", {})
 
@@ -68,8 +75,29 @@ class GameModelForm(forms.ModelForm):
             "inserted_at",
             "updated_at",
         ]
+        help_texts = {
+            "name": "What do you want to name your game?",
+            "starting_round_card_number": "How many cards should be dealt in the first round?",
+            "number_of_decks": "How many decks of cards are in play?",
+            "correct_prediction_points": "How many points should be awarded for a correct prediction?",
+        }
+        labels = {
+            "name": "Name",
+            "players": "Players",
+            "starting_round_card_number": "Starting Card Number",
+            "number_of_decks": "Number of Decks",
+            "correct_prediction_points": "Correct Prediction Points",
+        }
 
-    def clean_players(self):
+    def clean_players(self) -> List[Player]:
+        """Validate the players field.
+
+        Raises:
+            forms.ValidationError: If less than two players are selected.
+
+        Returns:
+            List[Player]: The cleaned players.
+        """
         players = self.cleaned_data["players"]
 
         if len(players) < 2:
@@ -79,7 +107,15 @@ class GameModelForm(forms.ModelForm):
 
         return players
 
-    def clean_number_of_decks(self):
+    def clean_number_of_decks(self) -> int:
+        """Validate the number of decks field.
+
+        Raises:
+            forms.ValidationError: If the number of decks is less than 1.
+
+        Returns:
+            int: The cleaned number of decks.
+        """
         number_of_decks = self.cleaned_data["number_of_decks"]
 
         if number_of_decks < 1:
@@ -89,7 +125,15 @@ class GameModelForm(forms.ModelForm):
 
         return number_of_decks
 
-    def clean_correct_prediction_points(self):
+    def clean_correct_prediction_points(self) -> int:
+        """Validate the correct prediction points field.
+
+        Raises:
+            forms.ValidationError: If the correct prediction points are less than 0.
+
+        Returns:
+            int: The cleaned correct prediction points.
+        """
         correct_prediction_points = self.cleaned_data["correct_prediction_points"]
 
         if correct_prediction_points < 0:
@@ -99,7 +143,18 @@ class GameModelForm(forms.ModelForm):
 
         return correct_prediction_points
 
-    def clean(self):
+    def clean(self) -> Dict:
+        """Validate the form as a whole.
+
+        This method is called after the individual field validators are called.
+
+        Raises:
+            forms.ValidationError: If the starting round card number is not between 1 and
+                the maximum possible starting round card number.
+
+        Returns:
+            Dict: The cleaned data.
+        """
         cleaned_data = super().clean()
 
         players = cleaned_data.get("players")
@@ -125,19 +180,27 @@ class GameModelForm(forms.ModelForm):
 
 
 class PlayerModelForm(forms.ModelForm):
+    """Form for creating a new player."""
+
     class Meta:
         model = Player
         exclude = ["created_by_user", "inserted_at", "updated_at"]
 
 
 class GameRoundPredictionForm(forms.Form):
-    def __init__(self, *args, **kwargs):
+    """Form for predicting the number of tricks each player will win in a round."""
+
+    def __init__(self, *args, **kwargs) -> None:
         self.card_number = kwargs.pop("card_number")
 
         round_players = kwargs.pop("round_players")
 
         super().__init__(*args, **kwargs)
 
+        # Add a field to contain the prediction of each player in the round. The field
+        # name is dynamically generated based on the player number. The field is
+        # initialised with the number of tricks predicted by the player in the round, to
+        # allow the user to edit their prediction.
         for round_player in round_players:
             field_name = f"tricks_predicted_{round_player.game_player.player_number}"
             self.fields[field_name] = forms.IntegerField(
@@ -146,7 +209,18 @@ class GameRoundPredictionForm(forms.Form):
                 validators=[MaxValueValidator(self.card_number), MinValueValidator(0)],
             )
 
-    def clean(self):
+    def clean(self) -> Dict:
+        """Validate the form as a whole.
+
+        This method is called after the individual field validators are called.
+
+        Raises:
+            forms.ValidationError: If the total number of tricks predicted is equal to
+                the number of cards in the round.
+
+        Returns:
+            Dict: The cleaned data.
+        """
         cleaned_data = super().clean()
 
         if sum(cleaned_data.values()) == self.card_number:
@@ -159,7 +233,9 @@ class GameRoundPredictionForm(forms.Form):
 
 
 class GameRoundScoreForm(forms.Form):
-    def __init__(self, *args, **kwargs):
+    """Form for scoring the number of tricks each player has won in a round."""
+
+    def __init__(self, *args, **kwargs) -> None:
         self.card_number = kwargs.pop("card_number")
 
         round_players = kwargs.pop("round_players")
@@ -174,7 +250,18 @@ class GameRoundScoreForm(forms.Form):
                 validators=[MaxValueValidator(self.card_number), MinValueValidator(0)],
             )
 
-    def clean(self):
+    def clean(self) -> Dict:
+        """Validate the form as a whole.
+
+        This method is called after the individual field validators are called.
+
+        Raises:
+            forms.ValidationError: If the total number of tricks scored is not equal to
+                the number of cards in the round.
+
+        Returns:
+            Dict: The cleaned data.
+        """
         cleaned_data = super().clean()
 
         if sum(cleaned_data.values()) != self.card_number:
