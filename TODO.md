@@ -1,3 +1,10 @@
+## Game config
+[] add support for different card progressions (max..1.1..max, 1..max..1, etc.)
+[] add option for penalty for missing prediction
+[] add option for lower bonus when 0 tricks predicted
+[] add option for manual trump setting each round (turn over top card in deck)
+[] add ability to provide custom round score calculation
+
 ## Gameplay
 
 [x] add buttons for 'Place Bids' and 'Add Scores' to game_show.html
