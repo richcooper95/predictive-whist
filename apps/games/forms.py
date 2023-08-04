@@ -1,3 +1,5 @@
+import datetime
+import random
 from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
 
@@ -13,11 +15,49 @@ class GameModelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)
+        initial = kwargs.pop("initial", {})
+
+        if initial.get("name") is None:
+            initial["name"] = self.create_name_suggestion()
+
+        kwargs["initial"] = initial
+
         super(GameModelForm, self).__init__(*args, **kwargs)
 
         self.fields["players"].queryset = Player.objects.filter(
             created_by_user=self.user
         ).all()
+
+    def create_name_suggestion(self) -> str:
+        """Create a name suggestion for the game.
+
+        Returns:
+            str: A name suggestion for the game.
+        """
+        adjectives = [
+            "Big",
+            "Huge",
+            "Fun",
+            "Epic",
+            "Amazing",
+            "Cool",
+            "Awesome",
+            "Tricky",
+            "Crazy",
+            "Wild",
+        ]
+
+        nouns = [
+            "Game",
+            "Championship",
+            "Competition",
+            "Showdown",
+            "Match",
+        ]
+
+        year = datetime.datetime.strftime(datetime.datetime.now(), "%y")
+
+        return f"The {random.choice(adjectives)} Whist {random.choice(nouns)} '{year}"
 
     class Meta:
         model = Game
