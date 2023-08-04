@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Info{% endblock %}
+
+{% block content %}
+  <div class="container-fluid">
+    <table style="width: 80%; height: 100%" class="table table-borderless">
+      <tr><td class="align-bottom"><h5>👨‍👩‍👧‍👦 Players and Cards</h5></td></tr>
+      <tr><td>
+        The game accommodates any number of players, as long as there are enough cards.
+        Multiple decks can be used for larger games.
+      </td></tr>
+      <tr><td>
+        Before creating a <a href="{% url 'games' %}" style="text-decoration: none">Game</a>, you must first create at least two <a href="{% url 'players' %}" style="text-decoration: none">Players</a>.
+      </td></tr>
+      <tr><td></td></tr>
+      <tr><td class="align-bottom"><h5>🔁 Rounds</h5></td></tr>
+      <tr><td>
+        A game consists of multiple rounds. Each round, the dealer, trump suit (or no
+        trumps), and number of cards dealt all change. The number of cards starts at a
+        chosen value and decreases each round to one, then increases back to the original
+        number.
+      </td></tr>
+      <tr><td>
+        A round consists of three phases: <strong>bidding</strong>,
+        <strong>playing</strong>, and <strong>scoring</strong>.
+      </td></tr>
+      <tr><td></td></tr>
+      <tr><td class="align-bottom"><h5>🧑‍⚖️ Bidding</h5></td></tr>
+      <tr><td>
+        Starting from the left of the dealer, each player must predict how many tricks
+        they will win based on the cards in their hand. The objective is to achieve the
+        exact number of tricks predicted. Points are awarded for the number of tricks won,
+        plus a bonus for correctly predicting the number of tricks.
+      </td></tr>
+      <tr><td></td></tr>
+      <tr><td class="align-bottom"><h5>🃏 Playing</h5></td></tr>
+      <tr><td>
+        The player to the dealer's left leads the first card, and play follows clockwise.
+        Players must follow the suit led if possible, or they can play any card if they
+        can't follow suit. If a card is played of the trump suit, the highest trump wins;
+        otherwise, the highest card of the suit led wins. The winner of the trick leads
+        the next card. This continues until all cards have been played.
+      </td></tr>
+      <tr><td></td></tr>
+      <tr><td class="align-bottom"><h5>🧮 Scoring</h5></td></tr>
+      <tr><td>
+        Players score points equivalent to the number of tricks they won during the round.
+        Additionally, a bonus is awarded for correctly predicting the number of tricks
+        won.
+      </td></tr>
+      <tr><td></td></tr>
+      <tr><td class="align-bottom"><h5>🥇 Winning</h5></td></tr>
+      <tr><td>
+        The player with the most points once all rounds have been played wins the game.
+      </td></tr>
+      <tr><td></td></tr>
+      <tr><td class="align-bottom"><h5>🎥 Tutorial</h5></td></tr>
+      <tr><td>
+        Here's a short video to help you get started. It's the closest I could find to the
+        rules I grew up with, which I've used as the basis for this site, but there are
+        a few subtle differences.
+      </td></tr>
+      <tr><td>
+        On this site:
+        <ol>
+          <li>
+            The trump suit is determined by a cycle, rather than the top card on the deck.
+          </li>
+          <li>
+            The starting number of cards is configurable.
+          </li>
+          <li>
+            The number of cards dealt changes each round.
+          </li>
+          <li>
+            The points won for a correct prediction is configurable.
+          </li>
+        </ol>
+      </td></tr>
+      <tr><td>
+        <iframe width="669" height="376" src="https://www.youtube.com/embed/8uX6clvAdA8"
+          title="How to Play Oh Hell (Card Game)" frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+      </td></tr>
+    </table>
+  </div>
+{% endblock %}

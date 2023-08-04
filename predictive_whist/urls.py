@@ -28,12 +28,14 @@ from apps.games.views import (
     PlayerDeleteView,
     PlayerListView,
 )
-from apps.home.views import HomeView
+from apps.home.views import HomeView, InfoView, RulesView
 
 urlpatterns = [
     path("accounts/", include("django_registration.backends.one_step.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     path("", HomeView.as_view(), name="home"),
+    path("info/", InfoView.as_view(), name="info"),
+    path("rules/", RulesView.as_view(), name="rules"),
     path("players/", PlayerListView.as_view(), name="players"),
     path("players/new/", PlayerCreateView.as_view(), name="player_create"),
     path("players/delete/<int:pk>/", PlayerDeleteView.as_view(), name="player_delete"),
