@@ -38,3 +38,4 @@
 
 ## General
 [] DRY things up (e.g. helper functions and view logic)
+[] add ability to email results to other players
