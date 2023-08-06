@@ -1,24 +1,32 @@
 from django.db import models
+from django.conf import settings
+
+from hashid_field import BigHashidAutoField
 
 
 class Player(models.Model):
     """A player.
 
     Attributes:
-        name (str): The name of the player.
+        first_name (str): The first name of the player.
+        last_name (str): The last name of the player.
         created_by_user (auth.User): The user who created this player.
         inserted_at (datetime): The datetime when this player was created.
         updated_at (datetime): The datetime when this player was last updated.
     """
 
-    name = models.CharField(max_length=255)
-    created_by_user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    id = BigHashidAutoField(primary_key=True, prefix="pla_")
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255)
+    created_by_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    )
 
     inserted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return self.name
+        return f"{self.first_name} {self.last_name}"
 
     def visible_to(self, user) -> bool:
         """Whether the given user can see this player.
@@ -30,6 +38,14 @@ class Player(models.Model):
             bool: Whether the given user can see this player.
         """
         return self.created_by_user == user or user.is_superuser
+
+    def full_name(self) -> str:
+        """The full name of this player.
+
+        Returns:
+            str: The full name of this player.
+        """
+        return self.first_name + " " + self.last_name
 
 
 class Game(models.Model):
@@ -53,6 +69,7 @@ class Game(models.Model):
         updated_at (datetime): The datetime when this game was last updated.
     """
 
+    id = BigHashidAutoField(primary_key=True, prefix="gam_")
     name = models.CharField(max_length=255)
     is_ongoing = models.BooleanField(default=True)
     correct_prediction_points = models.IntegerField(default=5)
@@ -60,7 +77,9 @@ class Game(models.Model):
     card_number_descending = models.BooleanField(default=True)
     number_of_decks = models.IntegerField(default=1)
 
-    created_by_user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    created_by_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    )
     players = models.ManyToManyField(Player, through="GamePlayer")
 
     inserted_at = models.DateTimeField(auto_now_add=True)
@@ -93,12 +112,15 @@ class GamePlayer(models.Model):
         score (int): The score of the player in the game.
         inserted_at (datetime): The datetime when this player was added to the game.
         updated_at (datetime): The datetime when this game player was last updated.
+        unique_display_name (str): The unique display name of this game player.
     """
 
+    id = BigHashidAutoField(primary_key=True, prefix="gpl_")
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     player_number = models.IntegerField()
     score = models.IntegerField(default=0)
+    unique_display_name = models.CharField(max_length=255, blank=True, null=True)
 
     inserted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -135,6 +157,7 @@ class GameRound(models.Model):
         updated_at (datetime): The datetime when this round was last updated.
     """
 
+    id = BigHashidAutoField(primary_key=True, prefix="rou_")
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     round_number = models.IntegerField()
     trump_suit = models.CharField(
@@ -150,7 +173,7 @@ class GameRound(models.Model):
     )
     card_number = models.IntegerField()
     total_tricks_predicted = models.IntegerField(null=True)
-    game_players = models.ManyToManyField(GamePlayer, through="GameRoundGamePlayer")
+    game_players = models.ManyToManyField(GamePlayer, through="GamePlayerGameRound")
 
     inserted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -167,8 +190,8 @@ class GameRound(models.Model):
         return self.game.visible_to(user)
 
 
-class GameRoundGamePlayer(models.Model):
-    """A game player in a game round.
+class GamePlayerGameRound(models.Model):
+    """A game player in a round.
 
     This is a through model for the many-to-many relationship between GameRound and
     GamePlayer.
@@ -186,6 +209,7 @@ class GameRoundGamePlayer(models.Model):
             The datetime when this game player game round was last updated.
     """
 
+    id = BigHashidAutoField(primary_key=True, prefix="rgp_")
     game_round = models.ForeignKey(GameRound, on_delete=models.CASCADE)
     game_player = models.ForeignKey(GamePlayer, on_delete=models.CASCADE)
     tricks_predicted = models.IntegerField(null=True)

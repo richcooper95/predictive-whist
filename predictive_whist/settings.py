@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "apps.home.apps.HomeConfig",
     "apps.games.apps.GamesConfig",
+    "apps.users.apps.UsersConfig",
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -142,3 +143,10 @@ LOGIN_REDIRECT_URL = "/"
 # Email settings for development
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = BASE_DIR / "sent_emails"
+
+AUTH_USER_MODEL = "users.User"
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+HASHID_FIELD_SALT = "odafvu96#zg1e_iu%nnkwbvf(&-b(axw=-x-t^rea&n*e4h4b2"

@@ -47,7 +47,7 @@
         <tr class="table-secondary">
           <th style="width: 70px">Round</th>
           {% for game_player in game_players %}
-            <th colspan="3">{{game_player.player.name}}</th>
+            <th colspan="3">{{game_player.unique_display_name}}</th>
           {% endfor %}
         </tr>
 

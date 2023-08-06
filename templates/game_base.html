@@ -3,13 +3,13 @@
 {% block title %}Game: {{game.name}}{% endblock %}
 
 {% block content %}
-  <div class="container-fluid" style="overflow: hidden; position: relative;">
-    <div style="
+  <div class="container-fluid" style="overflow: hidden; position: relative">
+    <div class="container-fluid" style="
       background-image: url('/static/images/card-drawing-{{latest_game_round.trump_suit}}.png');
       background-size: contain;
       background-repeat: no-repeat;
       background-color: white;
-      background-position: center;
+      background-position: center center;
       opacity: 0.1;
       position: fixed;
       width: 80%;
@@ -39,7 +39,7 @@
           <tr class="table-secondary">
             <th style="width: 70px"></th>
             {% for game_player in game_players %}
-              <th>{{game_player.player.name}}</th>
+              <th>{{game_player.unique_display_name}}</th>
             {% endfor %}
           </tr>
           <tr>

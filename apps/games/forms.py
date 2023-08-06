@@ -35,6 +35,29 @@ class GameModelForm(forms.ModelForm):
             created_by_user=self.user
         ).all()
 
+    class Meta:
+        model = Game
+        exclude = [
+            "is_ongoing",
+            "card_number_descending",
+            "created_by_user",
+            "inserted_at",
+            "updated_at",
+        ]
+        help_texts = {
+            "name": "What do you want to name your game?",
+            "starting_round_card_number": "How many cards should be dealt in the first round?",
+            "number_of_decks": "How many decks of cards are in play?",
+            "correct_prediction_points": "How many points should be awarded for a correct prediction?",
+        }
+        labels = {
+            "name": "Name",
+            "players": "Players",
+            "starting_round_card_number": "Starting Card Number",
+            "number_of_decks": "Number of Decks",
+            "correct_prediction_points": "Correct Prediction Points",
+        }
+
     def create_name_suggestion(self) -> str:
         """Create a name suggestion for the game.
 
@@ -65,29 +88,6 @@ class GameModelForm(forms.ModelForm):
         year = datetime.datetime.strftime(datetime.datetime.now(), "%y")
 
         return f"The {random.choice(adjectives)} Whist {random.choice(nouns)} '{year}"
-
-    class Meta:
-        model = Game
-        exclude = [
-            "is_ongoing",
-            "card_number_descending",
-            "created_by_user",
-            "inserted_at",
-            "updated_at",
-        ]
-        help_texts = {
-            "name": "What do you want to name your game?",
-            "starting_round_card_number": "How many cards should be dealt in the first round?",
-            "number_of_decks": "How many decks of cards are in play?",
-            "correct_prediction_points": "How many points should be awarded for a correct prediction?",
-        }
-        labels = {
-            "name": "Name",
-            "players": "Players",
-            "starting_round_card_number": "Starting Card Number",
-            "number_of_decks": "Number of Decks",
-            "correct_prediction_points": "Correct Prediction Points",
-        }
 
     def clean_players(self) -> List[Player]:
         """Validate the players field.

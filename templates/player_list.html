@@ -25,7 +25,7 @@
         </tr>
         {% for player in players %}
           <tr>
-            <td>{{ player.name }}</td>
+            <td>{{ player.full_name }}</td>
             <td>{{ player.inserted_at|date:"d/m/y" }}</td>
             <td>{{ player.ongoing_games }}</td>
             <td>{{ player.completed_games }}</td>

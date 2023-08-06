@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 
 from apps.games.views import (
     GameDeleteView,
@@ -29,8 +29,15 @@ from apps.games.views import (
     PlayerListView,
 )
 from apps.home.views import HomeView, InfoView, RulesView
+from apps.users.views import UserCreateView
+from apps.users.forms import UserCreateForm
 
 urlpatterns = [
+    path(
+        "accounts/register/",
+        UserCreateView.as_view(form_class=UserCreateForm),
+        name="django_registration_register",
+    ),
     path("accounts/", include("django_registration.backends.one_step.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     path("", HomeView.as_view(), name="home"),
@@ -38,28 +45,38 @@ urlpatterns = [
     path("rules/", RulesView.as_view(), name="rules"),
     path("players/", PlayerListView.as_view(), name="players"),
     path("players/new/", PlayerCreateView.as_view(), name="player_create"),
-    path("players/delete/<int:pk>/", PlayerDeleteView.as_view(), name="player_delete"),
+    re_path(
+        r"^players/delete/(?P<pk>pla_[0-9a-zA-Z]+)/$",
+        PlayerDeleteView.as_view(),
+        name="player_delete",
+    ),
     path("games/", GameListView.as_view(), name="games"),
-    path("games/<int:pk>/", GameShowView.as_view(), name="game_show"),
-    path("games/new/<", GameCreateView.as_view(), name="game_create"),
-    path("games/delete/<int:pk>/", GameDeleteView.as_view(), name="game_delete"),
-    path(
-        "games/<int:game_id>/round/<int:round_number>/bids/<int:player_number>/",
+    re_path(
+        r"^games/(?P<pk>gam_[0-9a-zA-Z]+)/$", GameShowView.as_view(), name="game_show"
+    ),
+    path("games/new/", GameCreateView.as_view(), name="game_create"),
+    re_path(
+        r"^games/delete/(?P<pk>gam_[0-9a-zA-Z]+)/$",
+        GameDeleteView.as_view(),
+        name="game_delete",
+    ),
+    re_path(
+        r"^games/(?P<game_id>gam_[0-9a-zA-Z]+)/round/(?P<round_number>[0-9]+)/bids/(?P<player_number>[0-9]+)/$",
         GameRoundPredictionView.as_view(),
         name="game_round_bids",
     ),
-    path(
-        "games/<int:game_id>/round/<int:round_number>/bids/",
+    re_path(
+        r"games/(?P<game_id>gam_[0-9a-zA-Z]+)/round/(?P<round_number>[0-9]+)/bids/",
         GameRoundPredictionView.as_view(),
         name="game_round_bids",
     ),
-    path(
-        "games/<int:game_id>/round/<int:round_number>/scores/<int:player_number>/",
+    re_path(
+        r"games/(?P<game_id>gam_[0-9a-zA-Z]+)/round/(?P<round_number>[0-9]+)/scores/(?P<player_number>[0-9]+)/",
         GameRoundScoreView.as_view(),
         name="game_round_scores",
     ),
-    path(
-        "games/<int:game_id>/round/<int:round_number>/scores/",
+    re_path(
+        r"games/(?P<game_id>gam_[0-9a-zA-Z]+)/round/(?P<round_number>[0-9]+)/scores/",
         GameRoundScoreView.as_view(),
         name="game_round_scores",
     ),

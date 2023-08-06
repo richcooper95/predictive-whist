@@ -9,7 +9,8 @@
     <h4 align="center">New Game</h4>
     {% if user_player_count < 2 %}
       <div class="alert alert-info" style="width: 100%; text-align: center" role="alert">
-        You need to create at least two players in the <strong>Players</strong> tab before you can create a game.
+        You need at least two players before you can create a game. Create a player in the
+        <strong><a href="{% url 'players' %}" style='text-decoration: none'>Players</a></strong> tab.
       </div>
     {% else %}
       <form action="" method="post">

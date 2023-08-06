@@ -1,6 +1,7 @@
-from typing import Dict
+from functools import reduce
+from typing import Dict, List
 from django.db import transaction
-from django.db.models import Max
+from django.db.models import Max, QuerySet
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import (
@@ -19,7 +20,7 @@ from .forms import (
     GameRoundScoreForm,
     PlayerModelForm,
 )
-from .models import GameRound, GameRoundGamePlayer, Player, Game, GamePlayer
+from .models import GameRound, GamePlayerGameRound, Player, Game, GamePlayer
 
 
 TRUMP_SUIT_TO_EMOJI = {
@@ -103,7 +104,9 @@ class GameListView(LoginRequiredMixin, TemplateView):
 
         for game in games:
             game.player_names = ", ".join(
-                game_players.filter(game=game).values_list("player__name", flat=True)
+                game_players.filter(game=game).values_list(
+                    "unique_display_name", flat=True
+                )
             )
 
             winning_game_player = (
@@ -111,7 +114,7 @@ class GameListView(LoginRequiredMixin, TemplateView):
             )
 
             if winning_game_player is not None and not game.is_ongoing:
-                game.winning_player = winning_game_player.player.name
+                game.winning_player = winning_game_player.unique_display_name
             else:
                 game.winning_player = "TBC"
 
@@ -155,7 +158,7 @@ class GameCreateView(LoginRequiredMixin, CreateView):
         """Save the game and redirect to the game page.
 
         Creates the game, the game players, the first round. Adds the game players to the
-        first round, creating a GameRoundGamePlayer object for each.
+        first round, creating a GamePlayerGameRound object for each.
 
         Args:
             form (GameModelForm): The form containing the game data.
@@ -178,6 +181,8 @@ class GameCreateView(LoginRequiredMixin, CreateView):
                 created_by_user=self.request.user,
             )
 
+            players = list(form.cleaned_data["players"])
+
             # Then, save the players by creating a GamePlayer object for each, making sure we
             # set the player_number correctly.
             # TODO: Enable users to choose the player order in the form.
@@ -186,8 +191,9 @@ class GameCreateView(LoginRequiredMixin, CreateView):
                     game=game,
                     player=player,
                     player_number=idx + 1,
+                    unique_display_name=self.get_unique_display_name(player, players),
                 )
-                for idx, player in enumerate(form.cleaned_data["players"])
+                for idx, player in enumerate(players)
             ]
 
             # Then we create the first round of the game, with H as the first trump
@@ -204,6 +210,44 @@ class GameCreateView(LoginRequiredMixin, CreateView):
             game_round.game_players.set(game_players)
 
         return HttpResponseRedirect(f"/games/{game.id}")
+
+    def get_unique_display_name(self, player: Player, players: List[Player]) -> str:
+        """Returns a unique display name for the given player.
+
+        This one of the following, in order of preference:
+        - The player's first name, if that is unique.
+        - The player's first name and however many letters of the surname are required to
+          make it unique.
+        - The player's first name (as a fallback). This will not be unique.
+
+        Args:
+            player (Player): The player to get a unique name for.
+            players (List[Player]): The list of players in the game.
+
+        Returns:
+            str: The unique player name.
+        """
+        if len([p for p in players if player.first_name == p.first_name]) == 1:
+            return player.first_name
+
+        # There is more than one player with this first name. Append as many letters as
+        # necessary from the surname to make it unique.
+        for i in range(1, len(player.last_name) - 1):
+            last_name = f"{player.last_name[:i]}"
+            if (
+                len(
+                    [
+                        p
+                        for p in players
+                        if p.first_name == player.first_name
+                        and p.last_name.startswith(last_name)
+                    ]
+                )
+                == 1
+            ):
+                return player.first_name + " " + last_name + "."
+
+        return player.full_name()
 
 
 class GameDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
@@ -235,13 +279,15 @@ class GameShowView(LoginRequiredMixin, TemplateView):
         )
         max_score = game_players.aggregate(Max("score"))["score__max"]
         winning_players = ", ".join(
-            game_players.filter(score=max_score).values_list("player__name", flat=True)
+            game_players.filter(score=max_score).values_list(
+                "unique_display_name", flat=True
+            )
         )
         latest_game_round = (
             GameRound.objects.filter(game=game).order_by("round_number").last()
         )
         round_players = (
-            GameRoundGamePlayer.objects.select_related("game_round", "game_player")
+            GamePlayerGameRound.objects.select_related("game_round", "game_player")
             .filter(game_round__game=game)
             .order_by("game_round__round_number", "game_player__player_number")
             .all()
@@ -293,14 +339,14 @@ class GameShowView(LoginRequiredMixin, TemplateView):
                 "game": game,
                 "game_players": game_players,
                 "game_player_names": ", ".join(
-                    game_players.values_list("player__name", flat=True)
+                    game_players.values_list("unique_display_name", flat=True)
                 ),
                 "winning_players": winning_players,
                 "latest_game_round": latest_game_round,
                 "trump_suit": TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit],
                 "dealer_name": game_players.get(
                     player_number=dealer_player_number
-                ).player.name,
+                ).player.first_name,
                 "game_rounds": game_rounds,
             },
         )
@@ -335,7 +381,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
 
         # We want to display the players in the order they should bid.
         round_players = list(
-            GameRoundGamePlayer.objects.select_related("game_round", "game_player")
+            GamePlayerGameRound.objects.select_related("game_round", "game_player")
             .filter(game_round=game_round)
             .order_by("game_player__player_number")
             .all()
@@ -368,7 +414,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
             GameRound.objects.filter(game=game).order_by("round_number").last()
         )
         round_players = list(
-            GameRoundGamePlayer.objects.select_related("game_round", "game_player")
+            GamePlayerGameRound.objects.select_related("game_round", "game_player")
             .filter(game_round=latest_game_round)
             .order_by("game_player__player_number")
             .all()
@@ -385,17 +431,19 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         context["game"] = game
         context["game_players"] = game_players
         context["game_player_names"] = ", ".join(
-            game_players.values_list("player__name", flat=True)
+            game_players.values_list("unique_display_name", flat=True)
         )
         context["winning_players"] = ", ".join(
-            game_players.filter(score=max_score).values_list("player__name", flat=True)
+            game_players.filter(score=max_score).values_list(
+                "unique_display_name", flat=True
+            )
         )
         context["latest_game_round"] = latest_game_round
         context["game_round"] = game_round
         context["trump_suit"] = TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit]
         context["dealer_name"] = game_players.get(
             player_number=dealer_player_number
-        ).player.name
+        ).player.first_name
         context["round_players"] = round_players
         context["player_number"] = (
             self.kwargs.get("player_number")
@@ -414,7 +462,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
             for round_player in form.cleaned_data:
                 player_number = round_player.split("_")[-1]
                 tricks_predicted = form.cleaned_data[round_player]
-                game_round_game_player = GameRoundGamePlayer.objects.get(
+                game_round_game_player = GamePlayerGameRound.objects.get(
                     game_round=game_round, game_player__player_number=player_number
                 )
 
@@ -441,7 +489,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
 
             total_tricks_predicted = sum(
                 round_player.tricks_predicted
-                for round_player in game_round.gameroundgameplayer_set.all()
+                for round_player in game_round.gameplayergameround_set.all()
             )
             game_round.total_tricks_predicted = total_tricks_predicted
             game_round.save()
@@ -477,7 +525,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
         )
 
         round_players = list(
-            GameRoundGamePlayer.objects.select_related("game_round", "game_player")
+            GamePlayerGameRound.objects.select_related("game_round", "game_player")
             .filter(game_round=game_round)
             .order_by("game_player__player_number")
             .all()
@@ -510,7 +558,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
             GameRound.objects.filter(game=game).order_by("round_number").last()
         )
         round_players = list(
-            GameRoundGamePlayer.objects.select_related("game_round", "game_player")
+            GamePlayerGameRound.objects.select_related("game_round", "game_player")
             .filter(game_round=game_round)
             .order_by("game_player__player_number")
             .all()
@@ -527,17 +575,19 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
         context["game"] = game
         context["game_players"] = game_players
         context["game_player_names"] = ", ".join(
-            game_players.values_list("player__name", flat=True)
+            game_players.values_list("unique_display_name", flat=True)
         )
         context["winning_players"] = ", ".join(
-            game_players.filter(score=max_score).values_list("player__name", flat=True)
+            game_players.filter(score=max_score).values_list(
+                "unique_display_name", flat=True
+            )
         )
         context["latest_game_round"] = latest_game_round
         context["game_round"] = game_round
         context["trump_suit"] = TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit]
         context["dealer_name"] = game_players.get(
             player_number=dealer_player_number
-        ).player.name
+        ).player.first_name
         context["round_players"] = round_players
         context["player_number"] = (
             self.kwargs.get("player_number")
@@ -562,7 +612,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
                 (
                     game_round_game_player,
                     _,
-                ) = GameRoundGamePlayer.objects.get_or_create(
+                ) = GamePlayerGameRound.objects.get_or_create(
                     game_round=game_round,
                     game_player__player_number=player_number,
                     defaults={"tricks_won": tricks_won},
@@ -627,7 +677,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
                 )
 
                 # Now set the game_players of the new game_round to the game_players we created
-                # earlier. This will also create the GameRoundGamePlayer objects.
+                # earlier. This will also create the GamePlayerGameRound objects.
                 next_round.game_players.set(game_round.game_players.all())
 
                 next_round.save()

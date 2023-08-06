@@ -16,7 +16,7 @@
       - [x] show 'Next' button under the textbox
       - [x] show bids for each player in their row
     - [x] submit: redirect back to game_show.html (having saved the bids in each
-      GameRoundGamePlayer and the total in the GameRound)
+      GamePlayerGameRound and the total in the GameRound)
     - [x] use whether total_tricks_predicted has been set in the latest_game_round to dictate
       which button to show?
   - [x] add scores:
