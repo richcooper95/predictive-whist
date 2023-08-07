@@ -12,7 +12,7 @@ of doing things.
 Next priorities are:
 - [ ] Add tests. (I was intentionally going for a 'figure things out on the fly for an MVP' approach here, but that can
    only get me so far!)
-- [ ] Implement a custom User class, which only requires an email (no username) and requires the first and last name so
+- [x] Implement a custom User class, which only requires an email (no username) and requires the first and last name so
    that a Player can be created automatically for the User.
 - [ ] Deploy this first version to GCP (switching to a Postgres DB in prod).
 - [ ] Add functionality for User 'friends' (so that if a User shares their token with another User, their Players are
