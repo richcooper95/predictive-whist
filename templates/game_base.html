@@ -41,7 +41,7 @@
             {% for game_player in game_players %}
               <th>
                 {% if game_player.player_number == dealer_player_number %}
-                  🂡
+                  <span class="badge rounded-pill bg-danger">Dealer</span>
                 {% endif %}
               </th>
             {% endfor %}
