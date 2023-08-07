@@ -1,0 +1,22 @@
+.collapse.navbar-collapse.show,
+.navbar-collapse.collapsing {
+    background-color: rgb(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(5.5px);
+    text-align: center;
+    background: linear-gradient(
+        rgba(var(--bs-light-rgb), 0.8),
+        rgba(var(--bs-secondary-rgb), 0.8)
+    );
+}
+
+.navbar-toggler:focus {
+    box-shadow: none !important;
+    text-decoration: none;
+}
+
+.dropdown-menu.show {
+    background-color: rgb(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(5.5px);
+    text-align: center;
+    background: rgba(var(--bs-light-rgb), 0.8);
+}
