@@ -24,3 +24,9 @@ body {
     text-align: center;
     background: rgba(var(--bs-light-rgb), 0.8);
 }
+
+tr.content-row {
+    backdrop-filter: blur(0.5px);
+    text-align: center;
+    background: rgba(var(--bs-light-rgb), 0.6);
+}
