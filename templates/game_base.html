@@ -29,7 +29,7 @@
           <td align="center"><strong>Round:</strong> {{latest_game_round.round_number}}</td>
           <td align="center"><strong>Trumps:</strong> {{trump_suit|safe}}</td>
           <td align="center"><strong>Cards:</strong> {{latest_game_round.card_number}}</td>
-          <td align="center"><strong>Dealer:</strong> {{dealer_name}}</td>
+          <td align="center"><strong>Dealer:</strong> {{dealer.unique_display_name}}</td>
           <td align="center"><strong>Leader(s):</strong> {{winning_players}}</td>
         </tr>
       </table>
@@ -40,7 +40,7 @@
             <th style="width: 70px"></th>
             {% for game_player in game_players %}
               <th>
-                {% if game_player.player_number == dealer_player_number %}
+                {% if game_player == dealer %}
                   <span class="badge rounded-pill bg-danger">Dealer</span>
                 {% endif %}
               </th>

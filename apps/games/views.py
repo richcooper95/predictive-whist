@@ -304,10 +304,7 @@ class GameShowView(LoginRequiredMixin, TemplateView):
                 "winning_players": winning_players,
                 "latest_game_round": latest_game_round,
                 "trump_suit": TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit],
-                "dealer_name": game_players.get(
-                    player_number=dealer_player_number
-                ).unique_display_name,
-                "dealer_player_number": dealer_player_number,
+                "dealer": game_players.get(player_number=dealer_player_number),
                 "game_rounds": game_rounds,
             },
         )
@@ -402,10 +399,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         context["latest_game_round"] = latest_game_round
         context["game_round"] = game_round
         context["trump_suit"] = TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit]
-        context["dealer_name"] = game_players.get(
-            player_number=dealer_player_number
-        ).unique_display_name
-        context["dealer_player_number"] = dealer_player_number
+        context["dealer"] = game_players.get(player_number=dealer_player_number)
         context["round_players"] = round_players
         context["player_number"] = (
             self.kwargs.get("player_number")
@@ -547,10 +541,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
         context["latest_game_round"] = latest_game_round
         context["game_round"] = game_round
         context["trump_suit"] = TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit]
-        context["dealer_name"] = game_players.get(
-            player_number=dealer_player_number
-        ).unique_display_name
-        context["dealer_player_number"] = dealer_player_number
+        context["dealer"] = game_players.get(player_number=dealer_player_number)
         context["round_players"] = round_players
         context["player_number"] = (
             self.kwargs.get("player_number")
