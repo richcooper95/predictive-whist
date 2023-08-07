@@ -10,16 +10,16 @@ I'm also figuring out best practice on the fly, so I'll likely come back and mak
 of doing things.
 
 Next priorities are:
-1. Add tests. (I was intentionally going for a 'figure things out on the fly for an MVP' approach here, but that can
+- [ ] Add tests. (I was intentionally going for a 'figure things out on the fly for an MVP' approach here, but that can
    only get me so far!)
-3. Implement a custom User class, which only requires an email (no username) and requires the first and last name so
+- [ ] Implement a custom User class, which only requires an email (no username) and requires the first and last name so
    that a Player can be created automatically for the User.
-4. Deploy this first version to GCP (switching to a Postgres DB in prod).
-5. Add functionality for User 'friends' (so that if a User shares their token with another User, their Players are
+- [ ] Deploy this first version to GCP (switching to a Postgres DB in prod).
+- [ ] Add functionality for User 'friends' (so that if a User shares their token with another User, their Players are
    both visible to each other, to enable a single Player to play games on multiple User accounts).
-6. Add more customisation for gameplay (there's a million varieties of scoring, round params, and special rounds,
+- [ ] Add more customisation for gameplay (there's a million varieties of scoring, round params, and special rounds,
    which aren't all currently supported).
-7. Make CSS customisations common (potentially downloading Bootstrap 5 instead of using `django-bootstrap-v5` and
+- [ ] Make CSS customisations common (potentially downloading Bootstrap 5 instead of using `django-bootstrap-v5` and
    customising the source). There are a _lot_ of `style=...`s dotted around, which I'd love to use for custom
    classes.
 
