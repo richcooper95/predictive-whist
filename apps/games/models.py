@@ -1,3 +1,4 @@
+from typing import List
 from django.db import models
 from django.conf import settings
 
@@ -46,6 +47,43 @@ class Player(models.Model):
             str: The full name of this player.
         """
         return self.first_name + " " + self.last_name
+
+    def unique_display_name(self, players: List["Player"]) -> str:
+        """Returns a unique display name for this player within the given list of players.
+
+        This one of the following, in order of preference:
+        - The player's first name, if that is unique.
+        - The player's first name and however many letters of the surname are required to
+          make it unique.
+        - The player's first name (as a fallback). This will not be unique.
+
+        Args:
+            players (List[Player]): The list of all players in a game.
+
+        Returns:
+            str: The unique player name.
+        """
+        if len([p for p in players if self.first_name == p.first_name]) == 1:
+            return self.first_name
+
+        # There is more than one player with this first name. Append as many letters as
+        # necessary from the surname to make it unique.
+        for i in range(1, len(self.last_name) - 1):
+            truncated_last_name = f"{self.last_name[:i]}"
+            if (
+                len(
+                    [
+                        p
+                        for p in players
+                        if p.first_name == self.first_name
+                        and p.last_name.startswith(truncated_last_name)
+                    ]
+                )
+                == 1
+            ):
+                return self.first_name + " " + truncated_last_name + "."
+
+        return self.full_name()
 
 
 class Game(models.Model):

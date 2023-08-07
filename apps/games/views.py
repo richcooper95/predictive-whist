@@ -191,7 +191,7 @@ class GameCreateView(LoginRequiredMixin, CreateView):
                     game=game,
                     player=player,
                     player_number=idx + 1,
-                    unique_display_name=self.get_unique_display_name(player, players),
+                    unique_display_name=player.unique_display_name(players),
                 )
                 for idx, player in enumerate(players)
             ]
@@ -210,44 +210,6 @@ class GameCreateView(LoginRequiredMixin, CreateView):
             game_round.game_players.set(game_players)
 
         return HttpResponseRedirect(f"/games/{game.id}")
-
-    def get_unique_display_name(self, player: Player, players: List[Player]) -> str:
-        """Returns a unique display name for the given player.
-
-        This one of the following, in order of preference:
-        - The player's first name, if that is unique.
-        - The player's first name and however many letters of the surname are required to
-          make it unique.
-        - The player's first name (as a fallback). This will not be unique.
-
-        Args:
-            player (Player): The player to get a unique name for.
-            players (List[Player]): The list of players in the game.
-
-        Returns:
-            str: The unique player name.
-        """
-        if len([p for p in players if player.first_name == p.first_name]) == 1:
-            return player.first_name
-
-        # There is more than one player with this first name. Append as many letters as
-        # necessary from the surname to make it unique.
-        for i in range(1, len(player.last_name) - 1):
-            last_name = f"{player.last_name[:i]}"
-            if (
-                len(
-                    [
-                        p
-                        for p in players
-                        if p.first_name == player.first_name
-                        and p.last_name.startswith(last_name)
-                    ]
-                )
-                == 1
-            ):
-                return player.first_name + " " + last_name + "."
-
-        return player.full_name()
 
 
 class GameDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
@@ -346,7 +308,7 @@ class GameShowView(LoginRequiredMixin, TemplateView):
                 "trump_suit": TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit],
                 "dealer_name": game_players.get(
                     player_number=dealer_player_number
-                ).player.first_name,
+                ).unique_display_name,
                 "game_rounds": game_rounds,
             },
         )
@@ -443,7 +405,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         context["trump_suit"] = TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit]
         context["dealer_name"] = game_players.get(
             player_number=dealer_player_number
-        ).player.first_name
+        ).unique_display_name
         context["round_players"] = round_players
         context["player_number"] = (
             self.kwargs.get("player_number")
@@ -587,7 +549,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
         context["trump_suit"] = TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit]
         context["dealer_name"] = game_players.get(
             player_number=dealer_player_number
-        ).player.first_name
+        ).unique_display_name
         context["round_players"] = round_players
         context["player_number"] = (
             self.kwargs.get("player_number")
