@@ -309,6 +309,7 @@ class GameShowView(LoginRequiredMixin, TemplateView):
                 "dealer_name": game_players.get(
                     player_number=dealer_player_number
                 ).unique_display_name,
+                "dealer_player_number": dealer_player_number,
                 "game_rounds": game_rounds,
             },
         )
@@ -406,6 +407,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         context["dealer_name"] = game_players.get(
             player_number=dealer_player_number
         ).unique_display_name
+        context["dealer_player_number"] = dealer_player_number
         context["round_players"] = round_players
         context["player_number"] = (
             self.kwargs.get("player_number")
@@ -550,6 +552,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
         context["dealer_name"] = game_players.get(
             player_number=dealer_player_number
         ).unique_display_name
+        context["dealer_player_number"] = dealer_player_number
         context["round_players"] = round_players
         context["player_number"] = (
             self.kwargs.get("player_number")

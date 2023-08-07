@@ -36,6 +36,16 @@
 
       <div class="table-responsive table-equal-width">
         <table class="table table-fixed" style="text-align: center; white-space: nowrap">
+          <tr>
+            <th style="width: 70px"></th>
+            {% for game_player in game_players %}
+              <th>
+                {% if game_player.player_number == dealer_player_number %}
+                  🂡
+                {% endif %}
+              </th>
+            {% endfor %}
+          </tr>
           <tr class="table-secondary">
             <th style="width: 70px"></th>
             {% for game_player in game_players %}
