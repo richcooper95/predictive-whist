@@ -85,6 +85,17 @@ class Player(models.Model):
 
         return self.full_name()
 
+    def initials(self) -> str:
+        """The initials of this player.
+
+        Returns:
+            str: The initials of this player.
+        """
+        def _initials(string) -> str:
+            return "".join(s[0] for s in string.replace(" ", "-").split("-"))
+
+        return _initials(self.first_name) + _initials(self.last_name)
+
 
 class Game(models.Model):
     """A game.

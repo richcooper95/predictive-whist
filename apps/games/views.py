@@ -104,9 +104,7 @@ class GameListView(LoginRequiredMixin, TemplateView):
 
         for game in games:
             game.player_names = ", ".join(
-                game_players.filter(game=game).values_list(
-                    "unique_display_name", flat=True
-                )
+                map(lambda gp: gp.player.initials(), game_players.filter(game=game))
             )
 
             winning_game_player = (
