@@ -4,7 +4,7 @@ from typing import Dict, List
 from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
 
-from apps.games.models import Game, Player
+from .models import Game, Player
 
 
 class GameModelForm(forms.ModelForm):
@@ -29,26 +29,30 @@ class GameModelForm(forms.ModelForm):
 
         kwargs["initial"] = initial
 
-        super(GameModelForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-        self.fields["players"].queryset = Player.objects.filter(
+        # TODO: Enable users to choose the player order in the form.
+        # TODO: See if we can find a way to define this without type: ignore.
+        self.fields["players"].queryset = Player.objects.filter(  # type: ignore[attr-defined]
             created_by_user=self.user
         ).all()
 
     class Meta:
         model = Game
-        exclude = [
-            "is_ongoing",
-            "card_number_descending",
-            "created_by_user",
-            "inserted_at",
-            "updated_at",
-        ]
+        fields = (
+            "name",
+            "players",
+            "starting_round_card_number",
+            "number_of_decks",
+            "correct_prediction_points",
+        )
         help_texts = {
             "name": "What do you want to name your game?",
             "starting_round_card_number": "How many cards should be dealt in the first round?",
             "number_of_decks": "How many decks of cards are in play?",
-            "correct_prediction_points": "How many points should be awarded for a correct prediction?",
+            "correct_prediction_points": (
+                "How many points should be awarded for a correct prediction?"
+            ),
         }
         labels = {
             "name": "Name",
@@ -157,26 +161,24 @@ class GameModelForm(forms.ModelForm):
         """
         cleaned_data = super().clean()
 
-        players = cleaned_data.get("players")
-        starting_round_card_number = cleaned_data.get("starting_round_card_number")
-        number_of_decks = cleaned_data.get("number_of_decks")
+        assert cleaned_data is not None
 
-        if all(
-            x is not None
-            for x in [players, starting_round_card_number, number_of_decks]
+        players = cleaned_data["players"]
+        starting_round_card_number = cleaned_data["starting_round_card_number"]
+        number_of_decks = cleaned_data["number_of_decks"]
+
+        max_starting_round_card_number = (number_of_decks * 52) // len(players)
+
+        if (
+            starting_round_card_number < 1
+            or starting_round_card_number > max_starting_round_card_number
         ):
-            max_starting_round_card_number = (number_of_decks * 52) // len(players)
+            raise forms.ValidationError(
+                "The starting round card number must be between 1 and "
+                f"{max_starting_round_card_number} with {len(players)} players.",
+            )
 
-            if (
-                starting_round_card_number < 1
-                or starting_round_card_number > max_starting_round_card_number
-            ):
-                raise forms.ValidationError(
-                    "The starting round card number must be between 1 and "
-                    f"{max_starting_round_card_number} with {len(players)} players.",
-                )
-
-            return cleaned_data
+        return cleaned_data
 
 
 class PlayerModelForm(forms.ModelForm):
@@ -184,8 +186,10 @@ class PlayerModelForm(forms.ModelForm):
 
     class Meta:
         model = Player
-        exclude = ["created_by_user", "inserted_at", "updated_at"]
-
+        fields = (
+            "first_name",
+            "last_name",
+        )
 
 class GameRoundPredictionForm(forms.Form):
     """Form for predicting the number of tricks each player will win in a round."""
@@ -222,6 +226,8 @@ class GameRoundPredictionForm(forms.Form):
             Dict: The cleaned data.
         """
         cleaned_data = super().clean()
+
+        assert cleaned_data is not None
 
         if sum(cleaned_data.values()) == self.card_number:
             raise forms.ValidationError(
@@ -263,6 +269,8 @@ class GameRoundScoreForm(forms.Form):
             Dict: The cleaned data.
         """
         cleaned_data = super().clean()
+
+        assert cleaned_data is not None
 
         if sum(cleaned_data.values()) != self.card_number:
             raise forms.ValidationError(

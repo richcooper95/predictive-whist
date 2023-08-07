@@ -1,7 +1,6 @@
-from functools import reduce
-from typing import Dict, List
+from typing import Dict
 from django.db import transaction
-from django.db.models import Max, QuerySet
+from django.db.models import Max
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import (
@@ -47,7 +46,16 @@ class PlayerListView(LoginRequiredMixin, TemplateView):
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """Get all players created by the current user."""
-        players = Player.objects.filter(created_by_user=self.request.user).all()
+        assert self.request.user.is_authenticated
+
+        players = [
+            {
+                "full_name": player.full_name(),
+                "inserted_at": player.inserted_at,
+                "id": player.id,
+            }
+            for player in Player.objects.filter(created_by_user=self.request.user).all()
+        ]
 
         game_players = (
             GamePlayer.objects.select_related("player", "game")
@@ -56,11 +64,11 @@ class PlayerListView(LoginRequiredMixin, TemplateView):
         )
 
         for player in players:
-            player.ongoing_games = game_players.filter(
-                player=player, game__is_ongoing=True
+            player["ongoing_games"] = game_players.filter(
+                player__id=player["id"], game__is_ongoing=True
             ).count()
-            player.completed_games = game_players.filter(
-                player=player, game__is_ongoing=False
+            player["completed_games"] = game_players.filter(
+                player__id=player["id"], game__is_ongoing=False
             ).count()
             # TODO: Add games won.
 
@@ -83,6 +91,7 @@ class PlayerCreateView(LoginRequiredMixin, CreateView):
 class PlayerDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
     """This view allows the user to delete a player."""
 
+    object: Player  # work around python/mypy#9031
     model = Player
     success_url = "/players"
     # TODO: This doesn't work. Why?
@@ -96,27 +105,35 @@ class GameListView(LoginRequiredMixin, TemplateView):
     template_name = "game_list.html"
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        games = Game.objects.filter(created_by_user=self.request.user).all()
+        assert self.request.user.is_authenticated
+
+        games = [
+            {"id": game.id, "is_ongoing": game.is_ongoing}
+            for game in Game.objects.filter(created_by_user=self.request.user).all()
+        ]
         game_players = GamePlayer.objects.select_related("game", "player").all()
 
         ongoing_games = []
         completed_games = []
 
         for game in games:
-            game.player_names = ", ".join(
-                map(lambda gp: gp.player.initials(), game_players.filter(game=game))
+            game["player_names"] = ", ".join(
+                map(
+                    lambda gp: gp.player.initials(),
+                    game_players.filter(game__id=game["id"]),
+                )
             )
 
             winning_game_player = (
-                game_players.filter(game=game).order_by("-score").first()
+                game_players.filter(game__id=game["id"]).order_by("-score").first()
             )
 
-            if winning_game_player is not None and not game.is_ongoing:
-                game.winning_player = winning_game_player.unique_display_name
+            if winning_game_player is not None and not game["is_ongoing"]:
+                game["winning_player"] = winning_game_player.unique_display_name
             else:
-                game.winning_player = "TBC"
+                game["winning_player"] = "TBC"
 
-            if game.is_ongoing:
+            if game["is_ongoing"]:
                 ongoing_games.append(game)
             else:
                 completed_games.append(game)
@@ -138,12 +155,14 @@ class GameCreateView(LoginRequiredMixin, CreateView):
     form_class = GameModelForm
 
     def get_form_kwargs(self) -> Dict:
-        kwargs = super(GameCreateView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
 
         return kwargs
 
     def get_context_data(self, **kwargs) -> Dict:
+        assert self.request.user.is_authenticated
+
         context = super().get_context_data(**kwargs)
 
         context["user_player_count"] = Player.objects.filter(
@@ -164,6 +183,8 @@ class GameCreateView(LoginRequiredMixin, CreateView):
         Returns:
             HttpResponseRedirect: Redirects to the page for the newly created game.
         """
+        assert self.request.user.is_authenticated
+
         with transaction.atomic():
             # First, save the game so we can get an ID.
             game = Game.objects.create(
@@ -213,6 +234,7 @@ class GameCreateView(LoginRequiredMixin, CreateView):
 class GameDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
     """This view allows the user to delete a game."""
 
+    object: Game  # work around python/mypy#9031
     model = Game
     success_url = "/games"
     # TODO: This doesn't work. Why?
@@ -246,6 +268,8 @@ class GameShowView(LoginRequiredMixin, TemplateView):
         latest_game_round = (
             GameRound.objects.filter(game=game).order_by("round_number").last()
         )
+        assert latest_game_round is not None
+
         round_players = (
             GamePlayerGameRound.objects.select_related("game_round", "game_player")
             .filter(game_round__game=game)
@@ -358,7 +382,7 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         return kwargs
 
     def get_context_data(self, **kwargs) -> Dict:
-        context = super(GameRoundPredictionView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
 
         game = get_object_or_404(Game, id=self.kwargs["game_id"])
         game_round = get_object_or_404(
@@ -371,6 +395,8 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         latest_game_round = (
             GameRound.objects.filter(game=game).order_by("round_number").last()
         )
+        assert latest_game_round is not None
+
         round_players = list(
             GamePlayerGameRound.objects.select_related("game_round", "game_player")
             .filter(game_round=latest_game_round)
@@ -415,38 +441,38 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
                 GameRound, round_number=self.kwargs["round_number"], game=game
             )
 
+            total_tricks_predicted = 0
+
             for round_player in form.cleaned_data:
                 player_number = round_player.split("_")[-1]
                 tricks_predicted = form.cleaned_data[round_player]
-                game_round_game_player = GamePlayerGameRound.objects.get(
+                game_player_game_round = GamePlayerGameRound.objects.get(
                     game_round=game_round, game_player__player_number=player_number
                 )
 
-                if game_round_game_player.tricks_won is not None:
+                if game_player_game_round.tricks_won is not None:
                     # We're editing a round which has already completed, so we need to
                     # make sure we don't double-count the score from when this round was
                     # originally played.
                     if (
-                        game_round_game_player.tricks_predicted
-                        == game_round_game_player.tricks_won
+                        game_player_game_round.tricks_predicted
+                        == game_player_game_round.tricks_won
                     ):
-                        game_round_game_player.game_player.score -= (
+                        game_player_game_round.game_player.score -= (
                             game_round.game.correct_prediction_points
                         )
 
-                    if tricks_predicted == game_round_game_player.tricks_won:
-                        game_round_game_player.game_player.score += (
+                    if tricks_predicted == game_player_game_round.tricks_won:
+                        game_player_game_round.game_player.score += (
                             game_round.game.correct_prediction_points
                         )
 
-                game_round_game_player.tricks_predicted = tricks_predicted
-                game_round_game_player.save()
-                game_round_game_player.game_player.save()
+                game_player_game_round.tricks_predicted = tricks_predicted
+                game_player_game_round.save()
+                game_player_game_round.game_player.save()
 
-            total_tricks_predicted = sum(
-                round_player.tricks_predicted
-                for round_player in game_round.gameplayergameround_set.all()
-            )
+                total_tricks_predicted += tricks_predicted
+
             game_round.total_tricks_predicted = total_tricks_predicted
             game_round.save()
 
@@ -499,7 +525,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
         return kwargs
 
     def get_context_data(self, **kwargs) -> Dict:
-        context = super(GameRoundScoreView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
 
         game = get_object_or_404(Game, id=self.kwargs["game_id"])
         game_round = get_object_or_404(
@@ -513,6 +539,8 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
         latest_game_round = (
             GameRound.objects.filter(game=game).order_by("round_number").last()
         )
+        assert latest_game_round is not None
+
         round_players = list(
             GamePlayerGameRound.objects.select_related("game_round", "game_player")
             .filter(game_round=game_round)
@@ -564,7 +592,7 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
                 player_number = round_player.split("_")[-1]
                 tricks_won = form.cleaned_data[round_player]
                 (
-                    game_round_game_player,
+                    game_player_game_round,
                     _,
                 ) = GamePlayerGameRound.objects.get_or_create(
                     game_round=game_round,
@@ -572,33 +600,32 @@ class GameRoundScoreView(LoginRequiredMixin, FormView):
                     defaults={"tricks_won": tricks_won},
                 )
 
-                if game_round_game_player.tricks_won is not None:
+                if game_player_game_round.tricks_won is not None:
                     editing_existing_round = True
 
-                if editing_existing_round:
-                    old_tricks_won = game_round_game_player.tricks_won
+                    old_tricks_won = game_player_game_round.tricks_won
 
-                    game_round_game_player.game_player.score -= old_tricks_won
+                    game_player_game_round.game_player.score -= old_tricks_won
 
-                    if game_round_game_player.tricks_predicted == old_tricks_won:
-                        game_round_game_player.game_player.score -= (
+                    if game_player_game_round.tricks_predicted == old_tricks_won:
+                        game_player_game_round.game_player.score -= (
                             game_round.game.correct_prediction_points
                         )
 
-                game_round_game_player.tricks_won = tricks_won
+                game_player_game_round.tricks_won = tricks_won
 
-                game_round_game_player.game_player.score += tricks_won
+                game_player_game_round.game_player.score += tricks_won
 
                 if (
-                    game_round_game_player.tricks_predicted
-                    == game_round_game_player.tricks_won
+                    game_player_game_round.tricks_predicted
+                    == game_player_game_round.tricks_won
                 ):
-                    game_round_game_player.game_player.score += (
+                    game_player_game_round.game_player.score += (
                         game_round.game.correct_prediction_points
                     )
 
-                game_round_game_player.save()
-                game_round_game_player.game_player.save()
+                game_player_game_round.save()
+                game_player_game_round.game_player.save()
 
             if not editing_existing_round:
                 # Now we need to figure out how many cards to deal for the next round.

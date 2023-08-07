@@ -2,7 +2,7 @@ from typing import List
 from django.db import models
 from django.conf import settings
 
-from hashid_field import BigHashidAutoField
+from hashid_field import BigHashidAutoField  # type: ignore
 
 
 class Player(models.Model):
@@ -91,6 +91,7 @@ class Player(models.Model):
         Returns:
             str: The initials of this player.
         """
+
         def _initials(string) -> str:
             return "".join(s[0] for s in string.replace(" ", "-").split("-"))
 
@@ -169,7 +170,7 @@ class GamePlayer(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     player_number = models.IntegerField()
     score = models.IntegerField(default=0)
-    unique_display_name = models.CharField(max_length=255, blank=True, null=True)
+    unique_display_name = models.CharField(max_length=255)
 
     inserted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -178,7 +179,7 @@ class GamePlayer(models.Model):
         ordering = ["player_number"]
 
     def __str__(self) -> str:
-        return str(self.game_id) + " - " + str(self.player_id)
+        return str(self.game.id) + " - " + str(self.player.id)
 
     def visible_to(self, user) -> bool:
         """Whether the given user can see this game player.
@@ -268,7 +269,7 @@ class GamePlayerGameRound(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return str(self.game_round_id) + " - " + str(self.game_player_id)
+        return str(self.game_round.id) + " - " + str(self.game_player.id)
 
     def visible_to(self, user) -> bool:
         """Whether the given user can see this game player game round.

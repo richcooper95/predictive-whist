@@ -32,6 +32,7 @@ from apps.home.views import HomeView, InfoView, RulesView
 from apps.users.views import UserCreateView
 from apps.users.forms import UserCreateForm
 
+# pylint: disable=line-too-long
 urlpatterns = [
     path(
         "accounts/register/",

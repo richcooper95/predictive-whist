@@ -1,4 +1,4 @@
-from django_registration.backends.one_step.views import RegistrationView
+from django_registration.backends.one_step.views import RegistrationView  # type: ignore
 
 from apps.games.models import Player
 

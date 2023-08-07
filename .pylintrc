@@ -1,1 +1,25 @@
-load-plugins=pylint_django
+[MASTER]
+    load-plugins=pylint_django
+    django-settings-module=predictive_whist.settings
+    ignore=migrations, tests
+
+[MESSAGES CONTROL]
+# C0111 Missing docstring
+# C0114 Missing module docstring
+# C0115 Missing class docstring
+disable=C0111,C0114,C0115
+
+[DESIGN]
+max-args=10
+max-locals=15
+max-returns=6
+max-branches=12
+max-statements=50
+max-parents=9
+max-attributes=7
+min-public-methods=0
+max-public-methods=50
+
+[FORMAT]
+max-line-length=100
+indent-string='    '

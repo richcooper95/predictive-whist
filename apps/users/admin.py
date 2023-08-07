@@ -1,11 +1,11 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
 from .forms import UserCreateForm, UserUpdateForm
 from .models import User
 
 
-class UserAdmin(UserAdmin):
+class UserAdmin(DjangoUserAdmin):
     list_display = ("email", "first_name", "last_name")
     ordering = ("email",)
 
