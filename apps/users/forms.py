@@ -1,4 +1,3 @@
-from django.contrib.auth.forms import UserChangeForm
 from django.forms import ModelForm
 
 from django_registration.forms import RegistrationForm  # type: ignore
