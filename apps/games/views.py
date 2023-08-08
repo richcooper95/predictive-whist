@@ -39,6 +39,42 @@ NEXT_TRUMP_SUIT = {
 }
 
 
+def game_base_context(game: Game) -> Dict:
+    """Return a base context for all game views."""
+    game_players = (
+        GamePlayer.objects.select_related("game", "player")
+        .filter(game=game)
+        .order_by("player_number")
+        .all()
+    )
+
+    max_score = game_players.aggregate(Max("score"))["score__max"]
+    winning_players = ", ".join(
+        game_players.filter(score=max_score).values_list(
+            "unique_display_name", flat=True
+        )
+    )
+
+    latest_game_round = (
+        GameRound.objects.filter(game=game).order_by("round_number").last()
+    )
+    assert latest_game_round is not None
+
+    dealer_player_number = latest_game_round.round_number % len(game_players) + 1
+
+    return {
+        "game": game,
+        "game_players": game_players,
+        "game_player_names": ", ".join(
+            game_players.values_list("unique_display_name", flat=True)
+        ),
+        "winning_players": winning_players,
+        "latest_game_round": latest_game_round,
+        "trump_suit": TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit],
+        "dealer": game_players.get(player_number=dealer_player_number),
+    }
+
+
 class PlayerListView(LoginRequiredMixin, TemplateView):
     """This view lists all players created by the current user."""
 
@@ -316,22 +352,7 @@ class GameShowView(LoginRequiredMixin, TemplateView):
         if not game.visible_to(self.request.user):
             return HttpResponseForbidden()
 
-        game_players = (
-            GamePlayer.objects.select_related("game", "player")
-            .filter(game=game)
-            .order_by("player_number")
-            .all()
-        )
-        max_score = game_players.aggregate(Max("score"))["score__max"]
-        winning_players = ", ".join(
-            game_players.filter(score=max_score).values_list(
-                "unique_display_name", flat=True
-            )
-        )
-        latest_game_round = (
-            GameRound.objects.filter(game=game).order_by("round_number").last()
-        )
-        assert latest_game_round is not None
+        base_context = game_base_context(game)
 
         round_players = (
             GamePlayerGameRound.objects.select_related("game_round", "game_player")
@@ -339,6 +360,9 @@ class GameShowView(LoginRequiredMixin, TemplateView):
             .order_by("game_round__round_number", "game_player__player_number")
             .all()
         )
+
+        latest_game_round = base_context["latest_game_round"]
+
         last_round_to_show = (
             latest_game_round.round_number
             if latest_game_round.total_tricks_predicted is not None
@@ -377,31 +401,18 @@ class GameShowView(LoginRequiredMixin, TemplateView):
             for round_number in range(last_round_to_show, 0, -1)
         ]
 
-        dealer_player_number = latest_game_round.round_number % len(game_players) + 1
-
         return render(
             request,
             self.template_name,
             {
-                "game": game,
-                "game_players": game_players,
-                "game_player_names": ", ".join(
-                    game_players.values_list("unique_display_name", flat=True)
-                ),
-                "winning_players": winning_players,
-                "latest_game_round": latest_game_round,
-                "trump_suit": TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit],
-                "dealer": game_players.get(player_number=dealer_player_number),
+                **base_context,
                 "game_rounds": game_rounds,
             },
         )
 
 
-class GameRoundPredictionView(LoginRequiredMixin, FormView):
-    """This view allows the user to enter the predictions for a game round."""
-
-    template_name = "game_round_bids.html"
-    form_class = GameRoundPredictionForm
+class GameRoundBaseView(LoginRequiredMixin, FormView):
+    """This is the base for round-specific views."""
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         game = get_object_or_404(Game, pk=self.kwargs["game_id"])
@@ -448,54 +459,45 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
 
         game = get_object_or_404(Game, id=self.kwargs["game_id"])
+
+        base_context = game_base_context(game)
+
         game_round = get_object_or_404(
             GameRound, round_number=self.kwargs["round_number"], game=game
         )
-        game_players = (
-            GamePlayer.objects.select_related("game", "player").filter(game=game).all()
-        )
-        max_score = game_players.aggregate(Max("score"))["score__max"]
-        latest_game_round = (
-            GameRound.objects.filter(game=game).order_by("round_number").last()
-        )
-        assert latest_game_round is not None
 
         round_players = list(
             GamePlayerGameRound.objects.select_related("game_round", "game_player")
-            .filter(game_round=latest_game_round)
+            .filter(game_round=game_round)
             .order_by("game_player__player_number")
             .all()
         )
 
-        starting_player_idx = game_round.round_number % len(game_players) + 1
+        starting_player_idx = game_round.round_number % len(round_players) + 1
 
         round_players = (
             round_players[starting_player_idx:] + round_players[:starting_player_idx]
         )
 
-        dealer_player_number = latest_game_round.round_number % len(game_players) + 1
-
-        context["game"] = game
-        context["game_players"] = game_players
-        context["game_player_names"] = ", ".join(
-            game_players.values_list("unique_display_name", flat=True)
-        )
-        context["winning_players"] = ", ".join(
-            game_players.filter(score=max_score).values_list(
-                "unique_display_name", flat=True
-            )
-        )
-        context["latest_game_round"] = latest_game_round
-        context["game_round"] = game_round
-        context["trump_suit"] = TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit]
-        context["dealer"] = game_players.get(player_number=dealer_player_number)
-        context["round_players"] = round_players
-        context["player_number"] = (
-            self.kwargs.get("player_number")
-            or round_players[0].game_player.player_number
-        )
+        context = {
+            **context,
+            **base_context,
+            "game_round": game_round,
+            "round_players": round_players,
+            "player_number": (
+                self.kwargs.get("player_number")
+                or round_players[0].game_player.player_number
+            ),
+        }
 
         return context
+
+
+class GameRoundPredictionView(GameRoundBaseView):
+    """This view allows the user to enter the predictions for a game round."""
+
+    template_name = "game_round_bids.html"
+    form_class = GameRoundPredictionForm
 
     def form_valid(self, form: GameRoundPredictionForm) -> HttpResponse:
         with transaction.atomic():
@@ -542,104 +544,11 @@ class GameRoundPredictionView(LoginRequiredMixin, FormView):
         return HttpResponseRedirect(f"/games/{game_round.game.id}")
 
 
-class GameRoundScoreView(LoginRequiredMixin, FormView):
+class GameRoundScoreView(GameRoundBaseView):
     """This view allows the user to enter the scores for a game round."""
 
     template_name = "game_round_scores.html"
     form_class = GameRoundScoreForm
-
-    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        game = get_object_or_404(Game, pk=self.kwargs["game_id"])
-        game_round = get_object_or_404(
-            GameRound, round_number=self.kwargs["round_number"], game=game
-        )
-
-        if not game_round.visible_to(self.request.user):
-            return HttpResponseForbidden()
-
-        return super().get(request, *args, **kwargs)
-
-    def get_success_url(self) -> str:
-        return self.request.path
-
-    def get_form_kwargs(self) -> Dict:
-        kwargs = super().get_form_kwargs()
-        game = get_object_or_404(Game, pk=self.kwargs["game_id"])
-        game_round = get_object_or_404(
-            GameRound, round_number=self.kwargs["round_number"], game=game
-        )
-
-        round_players = list(
-            GamePlayerGameRound.objects.select_related("game_round", "game_player")
-            .filter(game_round=game_round)
-            .order_by("game_player__player_number")
-            .all()
-        )
-
-        starting_player_idx = game_round.round_number % len(round_players) + 1
-
-        round_players = (
-            round_players[starting_player_idx:] + round_players[:starting_player_idx]
-        )
-
-        kwargs["round_players"] = round_players
-        kwargs["card_number"] = game_round.card_number
-
-        return kwargs
-
-    def get_context_data(self, **kwargs) -> Dict:
-        context = super().get_context_data(**kwargs)
-
-        game = get_object_or_404(Game, id=self.kwargs["game_id"])
-        game_round = get_object_or_404(
-            GameRound, round_number=self.kwargs["round_number"], game=game
-        )
-
-        game_players = (
-            GamePlayer.objects.select_related("game", "player").filter(game=game).all()
-        )
-        max_score = game_players.aggregate(Max("score"))["score__max"]
-        latest_game_round = (
-            GameRound.objects.filter(game=game).order_by("round_number").last()
-        )
-        assert latest_game_round is not None
-
-        round_players = list(
-            GamePlayerGameRound.objects.select_related("game_round", "game_player")
-            .filter(game_round=game_round)
-            .order_by("game_player__player_number")
-            .all()
-        )
-
-        starting_player_idx = game_round.round_number % len(game_players) + 1
-
-        round_players = (
-            round_players[starting_player_idx:] + round_players[:starting_player_idx]
-        )
-
-        dealer_player_number = latest_game_round.round_number % len(game_players) + 1
-
-        context["game"] = game
-        context["game_players"] = game_players
-        context["game_player_names"] = ", ".join(
-            game_players.values_list("unique_display_name", flat=True)
-        )
-        context["winning_players"] = ", ".join(
-            game_players.filter(score=max_score).values_list(
-                "unique_display_name", flat=True
-            )
-        )
-        context["latest_game_round"] = latest_game_round
-        context["game_round"] = game_round
-        context["trump_suit"] = TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit]
-        context["dealer"] = game_players.get(player_number=dealer_player_number)
-        context["round_players"] = round_players
-        context["player_number"] = (
-            self.kwargs.get("player_number")
-            or round_players[0].game_player.player_number
-        )
-
-        return context
 
     def form_valid(self, form: GameRoundScoreForm) -> HttpResponse:
         with transaction.atomic():
