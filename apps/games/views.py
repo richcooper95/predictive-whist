@@ -55,7 +55,9 @@ class PlayerListView(LoginRequiredMixin, TemplateView):
                 "created_by_user": player.created_by_user,
                 "id": player.id,
             }
-            for player in Player.objects.filter(created_by_user=self.request.user).exclude(is_deleted=True).all()
+            for player in Player.objects.filter(created_by_user=self.request.user)
+            .exclude(is_deleted=True)
+            .all()
         ]
 
         game_players = (
@@ -113,7 +115,12 @@ class PlayerDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
         if player.user == self.request.user:
             return HttpResponseRedirect(f"/players/{player.id}/delete/error/")
 
-        if GamePlayer.objects.select_related("game").filter(player=player).filter(game__is_ongoing=True).exists():
+        if (
+            GamePlayer.objects.select_related("game")
+            .filter(player=player)
+            .filter(game__is_ongoing=True)
+            .exists()
+        ):
             return HttpResponseRedirect(f"/players/{player.id}/delete/error/")
 
         return super().post(request, *args, **kwargs)
@@ -134,7 +141,10 @@ class PlayerDeleteErrorView(LoginRequiredMixin, TemplateView):
             "player": player,
             "player_is_user": player.user == self.request.user,
             "player_created_by_other_user": player.created_by_user != self.request.user,
-            "player_in_ongoing_game": GamePlayer.objects.select_related("game").filter(player=player).filter(game__is_ongoing=True).exists(),
+            "player_in_ongoing_game": GamePlayer.objects.select_related("game")
+            .filter(player=player)
+            .filter(game__is_ongoing=True)
+            .exists(),
         }
 
         return render(request, self.template_name, context)

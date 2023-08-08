@@ -33,9 +33,13 @@ class GameModelForm(forms.ModelForm):
 
         # TODO: Enable users to choose the player order in the form.
         # TODO: See if we can find a way to define this without type: ignore.
-        self.fields["players"].queryset = Player.objects.filter(  # type: ignore[attr-defined]
-            created_by_user=self.user
-        ).exclude(is_deleted=True).all()
+        self.fields["players"].queryset = (
+            Player.objects.filter(  # type: ignore[attr-defined]
+                created_by_user=self.user
+            )
+            .exclude(is_deleted=True)
+            .all()
+        )
 
     class Meta:
         model = Game
