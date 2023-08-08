@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "widget_tweaks",
     "apps.home.apps.HomeConfig",
+    "apps.players.apps.PlayersConfig",
     "apps.games.apps.GamesConfig",
     "apps.users.apps.UsersConfig",
 ]

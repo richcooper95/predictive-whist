@@ -183,17 +183,6 @@ class GameModelForm(forms.ModelForm):
         return cleaned_data
 
 
-class PlayerModelForm(forms.ModelForm):
-    """Form for creating a new player."""
-
-    class Meta:
-        model = Player
-        fields = (
-            "first_name",
-            "last_name",
-        )
-
-
 class GameRoundPredictionForm(forms.Form):
     """Form for predicting the number of tricks each player will win in a round."""
 

@@ -24,6 +24,8 @@ from apps.games.views import (
     GameShowView,
     GameListView,
     GameCreateView,
+)
+from apps.players.views import (
     PlayerCreateView,
     PlayerDeleteErrorView,
     PlayerDeleteView,
