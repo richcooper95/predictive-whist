@@ -26,8 +26,8 @@
       (will need to calculate the number of rounds in the game; maybe store in the Game?)
 
 ## Users
-- [ ] collect user's first and last name when they sign up
-  - [ ] create player for user automatically
+- [x] collect user's first and last name when they sign up
+  - [x] create player for user automatically
 - [ ] allow players to be shared across users
   - [ ] give each user a token/ID they can use to be added by others
   - [ ] allow users to add their friends as players from their user token
