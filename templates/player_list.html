@@ -17,11 +17,11 @@
     {% else %}
       <table class="table table-hover align-middle">
         <tr>
-          <th scope="col">Name</th>
-          <th scope="col">Created</th>
-          <th scope="col">Ongoing games</th>
-          <th scope="col">Completed games</th>
-          <th scope="col" align="right"></th>
+          <th style="width: 35%" scope="col">Name</th>
+          <th style="width: 20%" scope="col">Created</th>
+          <th style="width: 15%" scope="col">Ongoing games</th>
+          <th style="width: 15%" scope="col">Completed games</th>
+          <th style="width: 15%" scope="col" align="right"></th>
         </tr>
         {% for player in players %}
           <tr>
@@ -30,11 +30,29 @@
             <td>{{ player.ongoing_games }}</td>
             <td>{{ player.completed_games }}</td>
             <td>
-              <a role="button" style="width: 100px" class="btn btn-danger btn-sm" href="{% url 'player_delete' player.id %}" method="DELETE">Delete</a>
+              {% if player.is_deletable %}
+                <a
+                  role="button"
+                  style="width: 100px"
+                  class="btn btn-danger btn-sm"
+                  href="{% url 'player_delete' player.id %}"
+                >Delete</a>
+              {% else %}
+                <button
+                  type="button"
+                  style="width: 100px"
+                  class="btn btn-danger btn-sm"
+                  disabled
+                >Delete</button>
+              {% endif %}
             </td>
           </tr>
         {% endfor %}
       </table>
+      <small>
+        <b>Note: </b>
+        Players with ongoing games cannot be deleted, and you cannot delete yourself.
+      </small>
     {% endif %}
   </div>
 {% endblock %}

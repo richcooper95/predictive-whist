@@ -25,12 +25,13 @@ from apps.games.views import (
     GameListView,
     GameCreateView,
     PlayerCreateView,
+    PlayerDeleteErrorView,
     PlayerDeleteView,
     PlayerListView,
 )
 from apps.home.views import HomeView, InfoView, RulesView
-from apps.users.views import UserCreateView
-from apps.users.forms import UserCreateForm
+from apps.users.views import UserCreateView, UserUpdateView
+from apps.users.forms import UserCreateForm, UserUpdateForm
 
 # pylint: disable=line-too-long
 urlpatterns = [
@@ -38,6 +39,11 @@ urlpatterns = [
         "accounts/register/",
         UserCreateView.as_view(form_class=UserCreateForm),
         name="django_registration_register",
+    ),
+    path(
+        "accounts/profile/",
+        UserUpdateView.as_view(form_class=UserUpdateForm),
+        name="user_profile",
     ),
     path("accounts/", include("django_registration.backends.one_step.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
@@ -47,9 +53,14 @@ urlpatterns = [
     path("players/", PlayerListView.as_view(), name="players"),
     path("players/new/", PlayerCreateView.as_view(), name="player_create"),
     re_path(
-        r"^players/delete/(?P<pk>pla_[0-9a-zA-Z]+)/$",
+        r"^players/(?P<pk>pla_[0-9a-zA-Z]+)/delete/$",
         PlayerDeleteView.as_view(),
         name="player_delete",
+    ),
+    re_path(
+        r"^players/(?P<pk>pla_[0-9a-zA-Z]+)/delete/error/$",
+        PlayerDeleteErrorView.as_view(),
+        name="player_delete_error",
     ),
     path("games/", GameListView.as_view(), name="games"),
     re_path(

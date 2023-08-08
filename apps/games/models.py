@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 from django.db import models
 from django.conf import settings
 
@@ -11,6 +11,7 @@ class Player(models.Model):
     Attributes:
         first_name (str): The first name of the player.
         last_name (str): The last name of the player.
+        user (str): The user represented by this player.
         created_by_user (auth.User): The user who created this player.
         inserted_at (datetime): The datetime when this player was created.
         updated_at (datetime): The datetime when this player was last updated.
@@ -19,15 +20,24 @@ class Player(models.Model):
     id = BigHashidAutoField(primary_key=True, prefix="pla_")
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
-    created_by_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
+    created_by_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_players"
+    )
+    is_deleted = models.BooleanField(default=False)
 
     inserted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name}"
+
+    def delete(self, using=None, keep_parents=False) -> Any:
+        """Soft-deletes this player so they still appear in historic games."""
+        self.is_deleted = True
+        self.save()
 
     def visible_to(self, user) -> bool:
         """Whether the given user can see this player.

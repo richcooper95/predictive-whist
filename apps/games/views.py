@@ -52,14 +52,16 @@ class PlayerListView(LoginRequiredMixin, TemplateView):
             {
                 "full_name": player.full_name(),
                 "inserted_at": player.inserted_at,
+                "created_by_user": player.created_by_user,
                 "id": player.id,
             }
-            for player in Player.objects.filter(created_by_user=self.request.user).all()
+            for player in Player.objects.filter(created_by_user=self.request.user).exclude(is_deleted=True).all()
         ]
 
         game_players = (
             GamePlayer.objects.select_related("player", "game")
             .filter(player__created_by_user=self.request.user)
+            .exclude(player__is_deleted=True)
             .all()
         )
 
@@ -71,6 +73,11 @@ class PlayerListView(LoginRequiredMixin, TemplateView):
                 player__id=player["id"], game__is_ongoing=False
             ).count()
             # TODO: Add games won.
+            player["is_deletable"] = (
+                player["ongoing_games"] == 0
+                and player["created_by_user"] == self.request.user
+                and player["id"] != self.request.user.player.id
+            )
 
         return render(request, self.template_name, {"players": players})
 
@@ -94,9 +101,43 @@ class PlayerDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
     object: Player  # work around python/mypy#9031
     model = Player
     success_url = "/players"
-    # TODO: This doesn't work. Why?
-    success_message = "Player deleted successfully."
     template_name = "player_confirm_delete.html"
+
+    def post(self, request, *args, **kwargs):
+        """Override post to check the user can delete this player."""
+        player = self.get_object()
+
+        if self.request.user != player.created_by_user:
+            return HttpResponseRedirect(f"/players/{player.id}/delete/error/")
+
+        if player.user == self.request.user:
+            return HttpResponseRedirect(f"/players/{player.id}/delete/error/")
+
+        if GamePlayer.objects.select_related("game").filter(player=player).filter(game__is_ongoing=True).exists():
+            return HttpResponseRedirect(f"/players/{player.id}/delete/error/")
+
+        return super().post(request, *args, **kwargs)
+
+
+class PlayerDeleteErrorView(LoginRequiredMixin, TemplateView):
+    """This view is shown when a player cannot be deleted."""
+
+    template_name = "player_delete_error.html"
+
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """Get all players created by the current user."""
+        assert self.request.user.is_authenticated
+
+        player = get_object_or_404(Player, pk=kwargs["pk"])
+
+        context = {
+            "player": player,
+            "player_is_user": player.user == self.request.user,
+            "player_created_by_other_user": player.created_by_user != self.request.user,
+            "player_in_ongoing_game": GamePlayer.objects.select_related("game").filter(player=player).filter(game__is_ongoing=True).exists(),
+        }
+
+        return render(request, self.template_name, context)
 
 
 class GameListView(LoginRequiredMixin, TemplateView):
@@ -108,7 +149,12 @@ class GameListView(LoginRequiredMixin, TemplateView):
         assert self.request.user.is_authenticated
 
         games = [
-            {"id": game.id, "is_ongoing": game.is_ongoing}
+            {
+                "id": game.id,
+                "is_ongoing": game.is_ongoing,
+                "inserted_at": game.inserted_at,
+                "name": game.name,
+            }
             for game in Game.objects.filter(created_by_user=self.request.user).all()
         ]
         game_players = GamePlayer.objects.select_related("game", "player").all()
@@ -237,9 +283,16 @@ class GameDeleteView(LoginRequiredMixin, DeleteView, SuccessMessageMixin):
     object: Game  # work around python/mypy#9031
     model = Game
     success_url = "/games"
-    # TODO: This doesn't work. Why?
-    success_message = "Game deleted successfully."
     template_name = "game_confirm_delete.html"
+
+    def post(self, request, *args, **kwargs):
+        """Override post to check the user can delete this game."""
+        game = self.get_object()
+
+        if self.request.user != game.created_by_user:
+            return HttpResponseForbidden()
+
+        return super().post(request, *args, **kwargs)
 
 
 class GameShowView(LoginRequiredMixin, TemplateView):

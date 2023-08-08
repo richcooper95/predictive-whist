@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Player{% endblock %}
+
+{% block content %}
+  <h2>Delete Player</h2>
+  <p>Cannot delete player <strong>{{ player.full_name }}</strong>.</p>
+  {% if player_is_user %}
+    <p>You cannot delete yourself!</p>
+  {% elif player_in_ongoing_game %}
+    <p>
+      You cannot delete a player who is in an ongoing game. Either finish or delete
+      the game first.
+    </p>
+  {% elif player_created_by_other_user %}
+    <p>You cannot delete a player created by another user.</p>
+  {% endif %}
+  <p></p>
+{% endblock %}
