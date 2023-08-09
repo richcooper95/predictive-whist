@@ -3,7 +3,6 @@ from django.contrib import admin
 from .models import Game, GamePlayer, GameRound, GamePlayerGameRound
 
 
-
 class GameAdmin(admin.ModelAdmin):
     readonly_fields = ("inserted_at", "updated_at")
 
