@@ -42,6 +42,9 @@
     {# Assumes you setup the password_reset view in your URLconf #}
     <p><a href="{% url 'password_reset' %}">Forgotten your password?</a></p>
     <p>Don't have an account? <a href="{% url 'django_registration_register' %}">Sign up</a></p>
+    <small>
+      By signing in, you agree to our <a href="{% url 'privacy' %}">Privacy Policy</a>.
+    </small>
   </div>
 
 {% endblock %}

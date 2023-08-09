@@ -25,13 +25,13 @@ from apps.games.views import (
     GameListView,
     GameCreateView,
 )
+from apps.home.views import HomeView, InfoView, PrivacyPolicyView, RulesView
 from apps.players.views import (
     PlayerCreateView,
-    PlayerDeleteErrorView,
     PlayerDeleteView,
+    PlayerDeleteErrorView,
     PlayerListView,
 )
-from apps.home.views import HomeView, InfoView, RulesView
 from apps.users.views import UserCreateView, UserUpdateView
 from apps.users.forms import UserCreateForm, UserUpdateForm
 
@@ -94,5 +94,6 @@ urlpatterns = [
         GameRoundScoreView.as_view(),
         name="game_round_scores",
     ),
+    path("privacy-policy/", PrivacyPolicyView.as_view(), name="privacy"),
     path("admin/", admin.site.urls),
 ]

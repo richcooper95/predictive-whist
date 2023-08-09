@@ -43,10 +43,10 @@ class GameModelForm(forms.ModelForm):
         model = Game
         fields = (
             "name",
-            "players",
             "starting_round_card_number",
             "number_of_decks",
             "correct_prediction_points",
+            "players",
         )
         help_texts = {
             "name": "What do you want to name your game?",

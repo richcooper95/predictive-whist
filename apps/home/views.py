@@ -28,3 +28,12 @@ class RulesView(TemplateView):
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         return render(request, self.template_name, {})
+
+
+class PrivacyPolicyView(TemplateView):
+    """Privacy policy view."""
+
+    template_name = "privacy.html"
+
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        return render(request, self.template_name, {})
