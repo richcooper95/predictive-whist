@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block title %}What's Trumps?{% endblock %}
 
 {% block content %}
@@ -10,7 +12,7 @@
       <tr><td align="center" class="align-top"><i>Simplify</i> your games of whist with this handy scoring system and <i>never miss a trick again.</i> 😌</td></tr>
       <tr><td></td></tr>
       <tr><td class="align-bottom" align="center" style="width: 45%">
-        <img src="/static/images/card-drawing-N.png" width="40%">
+        <img src="{% static '/images/card-drawing-N.png' %}" width="40%">
       </td></tr>
     </table>
   </div>
