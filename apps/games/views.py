@@ -71,6 +71,7 @@ def game_base_context(game: Game) -> Dict:
         ),
         "winning_players": winning_players,
         "latest_game_round": latest_game_round,
+        "game_round_trump_suit_image_url": f"images/card-drawing-{latest_game_round.trump_suit}.png",
         "trump_suit": TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit],
         "dealer": game_players.get(player_number=dealer_player_number),
     }
