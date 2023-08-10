@@ -164,21 +164,22 @@ class GameModelForm(forms.ModelForm):
         cleaned_data = super().clean()
 
         assert cleaned_data is not None
-
-        players = cleaned_data["players"]
         starting_round_card_number = cleaned_data["starting_round_card_number"]
         number_of_decks = cleaned_data["number_of_decks"]
 
-        max_starting_round_card_number = (number_of_decks * 52) // len(players)
+        players = cleaned_data.get("players")
 
-        if (
-            starting_round_card_number < 1
-            or starting_round_card_number > max_starting_round_card_number
-        ):
-            raise forms.ValidationError(
-                "The starting round card number must be between 1 and "
-                f"{max_starting_round_card_number} with {len(players)} players.",
-            )
+        if players is not None:
+            max_starting_round_card_number = (number_of_decks * 52) // len(players)
+
+            if (
+                starting_round_card_number < 1
+                or starting_round_card_number > max_starting_round_card_number
+            ):
+                raise forms.ValidationError(
+                    "The starting round card number must be between 1 and "
+                    f"{max_starting_round_card_number} with {len(players)} players.",
+                )
 
         return cleaned_data
 
