@@ -266,3 +266,6 @@ if IS_HEROKU_APP:
             }
         }
     }
+
+if IS_HEROKU_APP:
+    SECURE_SSL_REDIRECT = True
