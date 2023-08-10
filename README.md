@@ -1,5 +1,7 @@
 # predictive-whist
 
+https://predictive-whist-f7fd3ec840e4.herokuapp.com/
+
 This is a scoring web app for Nomination Whist. It's a work-in-progress as I learn how to do things from scratch
 in Django.
 
