@@ -2,7 +2,7 @@
 
 This is _What's Trumps?_ - a scoring web app for Nomination Whist. 🃏
 
-You can sign up and play here: https://predictive-whist-f7fd3ec840e4.herokuapp.com/
+You can sign up and play here: https://whist.bartoncooper.com
 
 This is all a bit of fun really (we play a lot of whist in our family!) and is intended primarily as a learning
 exercise for Django and Heroku.
