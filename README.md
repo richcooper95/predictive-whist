@@ -16,7 +16,7 @@ Next priorities are:
    only get me so far!)
 - [x] Implement a custom User class, which only requires an email (no username) and requires the first and last name so
    that a Player can be created automatically for the User.
-- [ ] Deploy this first version to GCP (switching to a Postgres DB in prod).
+- [x] Deploy this first version to ~~GCP~~ Heroku (switching to a Postgres DB in prod).
 - [ ] Add functionality for User 'friends' (so that if a User shares their token with another User, their Players are
    both visible to each other, to enable a single Player to play games on multiple User accounts).
 - [ ] Add more customisation for gameplay (there's a million varieties of scoring, round params, and special rounds,
