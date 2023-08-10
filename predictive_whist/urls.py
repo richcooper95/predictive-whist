@@ -36,8 +36,12 @@ from apps.players.views import (
 from apps.users.views import UserCreateView, UserUpdateView
 from apps.users.forms import UserCreateForm, UserUpdateForm
 
+def trigger_error(request):
+    division_by_zero = 1 / 0
+
 # pylint: disable=line-too-long
 urlpatterns = [
+    path("sentry-debug/", trigger_error),
     path(
         "accounts/register/",
         UserCreateView.as_view(form_class=UserCreateForm),
