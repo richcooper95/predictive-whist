@@ -10,4 +10,4 @@ exercise for Django and Heroku.
 I'm also figuring out best practice on the fly. There will be a lot of `TODO`s dotted around, and the order of
 development doesn't always match what I would choose to do on a 'real' project.
 
-![image](https://github.com/richcooper95/predictive-whist/assets/58304039/271b4b64-b965-462e-8b34-190791dcad8c)
+![image](https://github.com/richcooper95/predictive-whist/assets/58304039/bc036298-ae7d-4d07-9c79-6c9e1e897a28)
