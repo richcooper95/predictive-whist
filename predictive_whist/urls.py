@@ -36,8 +36,10 @@ from apps.players.views import (
 from apps.users.views import UserCreateView, UserUpdateView
 from apps.users.forms import UserCreateForm, UserUpdateForm
 
+
 def trigger_error(request):
     division_by_zero = 1 / 0
+
 
 # pylint: disable=line-too-long
 urlpatterns = [
@@ -58,7 +60,7 @@ urlpatterns = [
         PasswordResetView.as_view(
             html_email_template_name="registration/password_reset_email.html"
         ),
-        name="password_reset"
+        name="password_reset",
     ),
     path("accounts/", include("django.contrib.auth.urls")),
     path("", HomeView.as_view(), name="home"),
