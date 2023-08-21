@@ -30,3 +30,7 @@ tr.content-row {
     text-align: center;
     background: rgba(var(--bs-light-rgb), 0.6);
 }
+
+label.form-label {
+    font-weight: bold;
+}
