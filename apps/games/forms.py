@@ -46,6 +46,7 @@ class GameModelForm(forms.ModelForm):
             "starting_round_card_number",
             "number_of_decks",
             "correct_prediction_points",
+            "double_last_round_points",
             "players",
         )
         help_texts = {
@@ -55,6 +56,7 @@ class GameModelForm(forms.ModelForm):
             "correct_prediction_points": (
                 "How many points should be awarded for a correct prediction?"
             ),
+            "double_last_round_points": "Should the final round have doubled points? (Beta)",
         }
         labels = {
             "name": "Name",
@@ -62,7 +64,9 @@ class GameModelForm(forms.ModelForm):
             "starting_round_card_number": "Starting Card Number",
             "number_of_decks": "Number of Decks",
             "correct_prediction_points": "Correct Prediction Points",
+            "double_last_round_points": "Double Last Round Points?",
         }
+        widgets = {"double_last_round_points": forms.RadioSelect}
 
     def create_name_suggestion(self) -> str:
         """Create a name suggestion for the game.

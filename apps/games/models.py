@@ -34,6 +34,9 @@ class Game(models.Model):
     starting_round_card_number = models.IntegerField()
     card_number_descending = models.BooleanField(default=True)
     number_of_decks = models.IntegerField(default=1)
+    double_last_round_points = models.BooleanField(
+        default=False, choices=((True, "Yes"), (False, "No"))
+    )
 
     created_by_user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE

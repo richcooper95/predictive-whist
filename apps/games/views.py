@@ -74,6 +74,7 @@ def game_base_context(game: Game) -> Dict:
         "game_round_trump_suit_image_url": f"images/card-drawing-{latest_game_round.trump_suit}.png",
         "trump_suit": TRUMP_SUIT_TO_EMOJI[latest_game_round.trump_suit],
         "dealer": game_players.get(player_number=dealer_player_number),
+        "is_double_points_round": round_score_factor(latest_game_round.round_number, game) == 2,
     }
 
 
@@ -180,6 +181,7 @@ class GameCreateView(LoginRequiredMixin, CreateView):
                     "starting_round_card_number"
                 ],
                 number_of_decks=form.cleaned_data["number_of_decks"],
+                double_last_round_points=form.cleaned_data["double_last_round_points"],
                 created_by_user=self.request.user,
             )
 
@@ -281,6 +283,7 @@ class GameShowView(LoginRequiredMixin, TemplateView):
                                 else 0
                             )
                         )
+                        * round_score_factor(int(round_number), game)
                         if round_player.tricks_won is not None
                         else "",
                         "player_number": round_player.game_player.player_number,
@@ -393,8 +396,9 @@ class GameRoundPredictionView(GameRoundBaseView):
     def form_valid(self, form: GameRoundPredictionForm) -> HttpResponse:
         with transaction.atomic():
             game = get_object_or_404(Game, pk=self.kwargs["game_id"])
+            round_number = int(self.kwargs["round_number"])
             game_round = get_object_or_404(
-                GameRound, round_number=self.kwargs["round_number"], game=game
+                GameRound, round_number=round_number, game=game
             )
 
             total_tricks_predicted = 0
@@ -410,18 +414,20 @@ class GameRoundPredictionView(GameRoundBaseView):
                     # We're editing a round which has already completed, so we need to
                     # make sure we don't double-count the score from when this round was
                     # originally played.
+                    score_factor = round_score_factor(round_number, game)
+
                     if (
                         game_player_game_round.tricks_predicted
                         == game_player_game_round.tricks_won
                     ):
                         game_player_game_round.game_player.score -= (
                             game_round.game.correct_prediction_points
-                        )
+                        ) * score_factor
 
                     if tricks_predicted == game_player_game_round.tricks_won:
                         game_player_game_round.game_player.score += (
                             game_round.game.correct_prediction_points
-                        )
+                        ) * score_factor
 
                 game_player_game_round.tricks_predicted = tricks_predicted
                 game_player_game_round.save()
@@ -444,8 +450,9 @@ class GameRoundScoreView(GameRoundBaseView):
     def form_valid(self, form: GameRoundScoreForm) -> HttpResponse:
         with transaction.atomic():
             game = get_object_or_404(Game, pk=self.kwargs["game_id"])
+            round_number = int(self.kwargs["round_number"])
             game_round = get_object_or_404(
-                GameRound, round_number=self.kwargs["round_number"], game=game
+                GameRound, round_number=round_number, game=game
             )
 
             # TODO: Neaten this up.
@@ -463,21 +470,25 @@ class GameRoundScoreView(GameRoundBaseView):
                     defaults={"tricks_won": tricks_won},
                 )
 
+                score_factor = round_score_factor(round_number, game)
+
                 if game_player_game_round.tricks_won is not None:
                     editing_existing_round = True
 
                     old_tricks_won = game_player_game_round.tricks_won
 
-                    game_player_game_round.game_player.score -= old_tricks_won
+                    game_player_game_round.game_player.score -= (
+                        old_tricks_won * score_factor
+                    )
 
                     if game_player_game_round.tricks_predicted == old_tricks_won:
                         game_player_game_round.game_player.score -= (
                             game_round.game.correct_prediction_points
-                        )
+                        ) * score_factor
 
                 game_player_game_round.tricks_won = tricks_won
 
-                game_player_game_round.game_player.score += tricks_won
+                game_player_game_round.game_player.score += tricks_won * score_factor
 
                 if (
                     game_player_game_round.tricks_predicted
@@ -485,7 +496,7 @@ class GameRoundScoreView(GameRoundBaseView):
                 ):
                     game_player_game_round.game_player.score += (
                         game_round.game.correct_prediction_points
-                    )
+                    ) * score_factor
 
                 game_player_game_round.save()
                 game_player_game_round.game_player.save()
@@ -527,3 +538,17 @@ class GameRoundScoreView(GameRoundBaseView):
                 next_round.save()
 
         return HttpResponseRedirect(f"/games/{game_round.game.id}")
+
+
+# TODO: Move these two functions (temporary addition for holiday playing!)
+def is_last_round(round_number: int, starting_round_card_number: int):
+    return round_number == starting_round_card_number * 2 - 1
+
+
+def round_score_factor(round_number: int, game: Game):
+    if game.double_last_round_points and is_last_round(
+        round_number, game.starting_round_card_number
+    ):
+        return 2
+
+    return 1
