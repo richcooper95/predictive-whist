@@ -66,6 +66,10 @@
         </table>
       </div>
 
+      {% if is_double_points_round %}
+        <span class="badge rounded-pill bg-warning" style="margin-bottom: 10px">Double Points Round</span>
+      {% endif %}
+
       {% block game_round_content %}{% endblock %}
 
     </div>

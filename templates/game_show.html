@@ -27,13 +27,6 @@
           <a style="width: 140px" role="button" class="btn btn-danger" href="{% url 'game_delete' game.id %}">Delete game</a>
         </td>
       </tr>
-      {% if is_double_points_round %}
-        <tr>
-          <td colspan=2>
-            <span class="badge rounded-pill bg-warning">Double Points Round</span>
-          </td>
-        </tr>
-      {% endif %}
     </table>
   {% else %}
     <table align="center" style="width: 25%" class="table table-borderless">
