@@ -17,7 +17,7 @@
         </td>
       </tr>
     </table>
-  {% elif latest_game_round.total_tricks_predicted %}
+  {% elif latest_game_round.total_tricks_predicted is not none %}
     <table align="center" style="width: 25%" class="table table-borderless">
       <tr>
         <td align="center">
